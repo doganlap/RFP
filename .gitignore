@@ -30,3 +30,6 @@ yarn-error.log*
 *.tmp
 *.temp
 New Text Document*.txt
+
+# Local Netlify folder
+.netlify

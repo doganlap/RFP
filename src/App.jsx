@@ -28,8 +28,12 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 const hasValidFirebaseConfig = 
     firebaseConfig.apiKey && 
     firebaseConfig.apiKey !== 'DEFAULT_API_KEY' && 
+    firebaseConfig.apiKey !== '{}' &&
     firebaseConfig.projectId && 
-    firebaseConfig.projectId !== 'DEFAULT_PROJECT_ID';
+    firebaseConfig.projectId !== 'DEFAULT_PROJECT_ID' &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.authDomain !== 'DEFAULT_AUTH_DOMAIN' &&
+    firebaseConfig.apiKey.length > 20; // Valid API keys are typically longer
 
 // --- Contexts ---
 const FirebaseContext = createContext(null);
@@ -49,7 +53,8 @@ const FirebaseProvider = ({ children }) => {
     useEffect(() => {
         // If no valid Firebase config, run in mock mode
         if (!hasValidFirebaseConfig) {
-            console.warn('?? Firebase config is invalid or missing. Running in DEMO MODE with mock data.');
+            console.warn('🔧 Firebase config is invalid or missing. Running in DEMO MODE with mock data.');
+            console.log('Current config:', firebaseConfig);
             setUserId('demo-user-' + Math.random().toString(36).substr(2, 9));
             setIsAuthReady(true);
             setFirebaseError('Firebase not configured - using demo mode');
@@ -58,6 +63,7 @@ const FirebaseProvider = ({ children }) => {
 
         // Try to initialize Firebase with valid config
         try {
+            console.log('🔥 Attempting Firebase initialization...');
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
             const dbInstance = getFirestore(app);
@@ -78,7 +84,8 @@ const FirebaseProvider = ({ children }) => {
                         }
                     } catch (error) {
                         console.error("Error signing in:", error);
-                        setFirebaseError(error.message);
+                        console.warn('🔧 Falling back to demo mode due to auth error');
+                        setFirebaseError('Authentication failed - using demo mode');
                         setUserId('fallback-user-' + Math.random().toString(36).substr(2, 9));
                         setIsAuthReady(true);
                     }
@@ -87,8 +94,9 @@ const FirebaseProvider = ({ children }) => {
             return () => unsubscribe();
         } catch (error) {
             console.error("Error initializing Firebase:", error);
-            setFirebaseError(error.message);
-            setUserId('error-user-' + Math.random().toString(36).substr(2, 9));
+            console.warn('🔧 Falling back to demo mode due to initialization error');
+            setFirebaseError('Firebase initialization failed - using demo mode');
+            setUserId('demo-user-' + Math.random().toString(36).substr(2, 9));
             setIsAuthReady(true);
         }
     }, []);
