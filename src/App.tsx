@@ -12,6 +12,7 @@ import LegalReview from './pages/LegalReview';
 import FinanceReview from './pages/FinanceReview';
 import TechReview from './pages/TechReview';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import Dashboard from './pages/Dashboard';
 import { useRFP } from './hooks/useRFP';
 
 const App: React.FC = () => {
@@ -27,8 +28,8 @@ const App: React.FC = () => {
     <Router>
       <AppLayout>
         <Routes>
-          <Route path={ROUTES.HOME} element={<RFPList />} />
-          <Route path={ROUTES.DASHBOARD} element={<RFPList />} />
+          <Route path={ROUTES.HOME} element={<Dashboard />} />
+          <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           <Route path={ROUTES.RFP.LIST} element={<RFPList />} />
           <Route path={ROUTES.RFP.DETAIL} element={<RealRFPProcess />} />
           <Route path={ROUTES.ANALYSIS.WIN_LOSS} element={<WinLossAnalysis />} />
