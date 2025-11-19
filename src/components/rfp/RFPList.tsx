@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRFP } from '../../hooks/useRFP';
+import { useAuth } from '../../hooks/useAuth';
 import type { RFP } from '../../types';
 import { Priority } from '../../types';
 import { ROUTES, getRoute } from '../../config/routes';
@@ -41,7 +42,8 @@ export const RFPList: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth();
 
   useEffect(() => {
     setIsLoading(true);
@@ -143,9 +145,10 @@ export const RFPList: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">{t('create_new_rfp')}</h2>
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateRfp}>
+      {user?.permissions?.includes('rfp.create') && (
+        <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">{t('create_new_rfp')}</h2>
+          <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateRfp}>
           <div className="col-span-2 md:col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="rfp-title">
               {t('title')}
@@ -220,6 +223,7 @@ export const RFPList: React.FC = () => {
           </div>
         </form>
       </div>
+      )}
 
       <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg">
         <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-gray-700/50 px-6 py-4">
