@@ -47,6 +47,26 @@ const useFirebase = () => useContext(FirebaseContext);
 const AppContext = createContext(null);
 const useAppContext = () => useContext(AppContext);
 
+// --- App Context Provider ---
+const AppProvider = ({ children }) => {
+    const [state, setState] = useState({
+        appReady: true,
+        theme: 'light',
+        sidebarOpen: true,
+    });
+
+    const value = {
+        state,
+        setState,
+    };
+
+    return (
+        <AppContext.Provider value={value}>
+            {children}
+        </AppContext.Provider>
+    );
+};
+
 // --- Firebase Initialization Provider ---
 const FirebaseProvider = ({ children }) => {
     const [auth, setAuth] = useState(null);
