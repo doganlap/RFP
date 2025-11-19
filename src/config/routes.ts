@@ -25,6 +25,12 @@ export const ROUTES = {
     FINANCE: '/rfps/:id/sme/finance',
     TECH: '/rfps/:id/sme/tech',
   },
+  SME_GENERAL: {
+    LEGAL: '/sme/legal',
+    FINANCE: '/sme/finance',
+    TECH: '/sme/tech',
+  },
+  TEAM: '/team',
   SETTINGS: {
     ROOT: '/settings',
     PROFILE: '/settings/profile',

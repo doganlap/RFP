@@ -2,9 +2,7 @@
  * Enterprise Sidebar Component
  */
 import React from 'react';
-import { useAppStore } from '../../store';
-import { cn } from '../../utils/cn';
-import { useTranslation } from 'react-i18next';
+import { ROUTES } from '../../config/routes';
 import {
   Home,
   FileText,
@@ -28,14 +26,14 @@ export const Sidebar: React.FC = () => {
   const { t } = useTranslation();
 
   const navigation: NavItem[] = [
-    { name: t('dashboard'), href: '/dashboard', icon: Home, current: true },
-    { name: t('rfps'), href: '/rfps', icon: FileText },
-    { name: t('analytics'), href: '/analytics', icon: BarChart3 },
-    { name: t('legal_review'), href: '/sme/legal', icon: Shield },
-    { name: t('finance_review'), href: '/sme/finance', icon: DollarSign },
-    { name: t('tech_review'), href: '/sme/tech', icon: Code },
-    { name: t('team'), href: '/team', icon: Users },
-    { name: t('settings'), href: '/settings', icon: Settings },
+    { name: t('dashboard'), href: ROUTES.DASHBOARD, icon: Home, current: true },
+    { name: t('rfps'), href: ROUTES.RFP.LIST, icon: FileText },
+    { name: t('analytics'), href: ROUTES.ANALYSIS.WIN_LOSS, icon: BarChart3 },
+    { name: t('legal_review'), href: ROUTES.SME_GENERAL.LEGAL, icon: Shield },
+    { name: t('finance_review'), href: ROUTES.SME_GENERAL.FINANCE, icon: DollarSign },
+    { name: t('tech_review'), href: ROUTES.SME_GENERAL.TECH, icon: Code },
+    { name: t('team'), href: ROUTES.TEAM, icon: Users },
+    { name: t('settings'), href: ROUTES.SETTINGS.ROOT, icon: Settings },
   ];
 
   return (

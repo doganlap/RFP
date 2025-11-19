@@ -6,6 +6,11 @@ import RFPList from './components/rfp/RFPList';
 import { RealRFPProcess } from './RealRFPProcess.jsx';
 import WinLossAnalysis from './components/WinLossAnalysis';
 import Integrations from './components/settings/Integrations';
+import Settings from './pages/Settings';
+import Team from './pages/Team';
+import LegalReview from './pages/LegalReview';
+import FinanceReview from './pages/FinanceReview';
+import TechReview from './pages/TechReview';
 import { useRFP } from './hooks/useRFP';
 
 const App: React.FC = () => {
@@ -26,6 +31,11 @@ const App: React.FC = () => {
           <Route path={ROUTES.RFP.LIST} element={<RFPList />} />
           <Route path={ROUTES.RFP.DETAIL} element={<RealRFPProcess />} />
           <Route path={ROUTES.ANALYSIS.WIN_LOSS} element={<WinLossAnalysis />} />
+          <Route path={ROUTES.SME_GENERAL.LEGAL} element={<LegalReview />} />
+          <Route path={ROUTES.SME_GENERAL.FINANCE} element={<FinanceReview />} />
+          <Route path={ROUTES.SME_GENERAL.TECH} element={<TechReview />} />
+          <Route path={ROUTES.TEAM} element={<Team />} />
+          <Route path={ROUTES.SETTINGS.ROOT} element={<Settings />} />
           <Route path={ROUTES.SETTINGS.INTEGRATIONS} element={<Integrations />} />
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>

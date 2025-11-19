@@ -4,6 +4,7 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import Footer from './Footer';
 import { useAppStore } from '../../store';
 import { cn } from '../../utils/cn';
 
@@ -30,6 +31,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         >
           {children}
         </main>
+        <Footer />
       </div>
     </div>
   );
