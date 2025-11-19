@@ -159,7 +159,7 @@ const PivotTable: React.FC<PivotTableProps> = ({ data, title }) => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {props.cols.map((col: string, i: number) => (
+                      {Array.isArray(props.cols) && props.cols.map((col: string, i: number) => (
                         <th key={i} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {col}
                         </th>
@@ -167,9 +167,9 @@ const PivotTable: React.FC<PivotTableProps> = ({ data, title }) => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {props.rows.map((row: any[], i: number) => (
+                    {Array.isArray(props.rows) && props.rows.map((row: any, i: number) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        {row.map((cell: any, j: number) => (
+                        {Array.isArray(row) && row.map((cell: any, j: number) => (
                           <td key={j} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {cell}
                           </td>
