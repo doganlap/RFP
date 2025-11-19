@@ -11,7 +11,10 @@ import {
   Shield,
   CheckCircle,
   Award,
-  Users
+  Users,
+  AlertCircle,
+  Sparkles,
+  Trophy
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../config/routes';
@@ -61,7 +64,7 @@ const LandingPage: React.FC = () => {
       titleEn: 'Co-Pilot',
       titleAr: 'مساعد ذكي',
       status: 'الآن • Now',
-      icon: '🤝',
+      icon: <Bot className="w-16 h-16" />,
       features: ['AI Suggestions', 'اقتراحات ذكية', 'Analytics', 'تحليلات فورية'],
       color: 'bg-gradient-to-br from-blue-500 to-blue-600'
     },
@@ -71,7 +74,7 @@ const LandingPage: React.FC = () => {
       titleEn: 'Semi-Auto',
       titleAr: 'شبه آلي',
       status: 'Q1-Q2 2025',
-      icon: '⚡',
+      icon: <Target className="w-16 h-16" />,
       features: ['Auto-Assignment', 'تعيين تلقائي', 'AI Drafts', 'مسودات ذكية'],
       color: 'bg-gradient-to-br from-purple-500 to-purple-600'
     },
@@ -81,7 +84,7 @@ const LandingPage: React.FC = () => {
       titleEn: 'Autonomous',
       titleAr: 'مستقل تماماً',
       status: 'Q3-Q4 2025',
-      icon: '🚀',
+      icon: <Rocket className="w-16 h-16" />,
       features: ['Self-Learning', 'تعلم ذاتي', 'Zero-Touch', 'تلقائي كامل'],
       color: 'bg-gradient-to-br from-green-500 to-green-600'
     }
@@ -195,7 +198,7 @@ const LandingPage: React.FC = () => {
                 className={`relative rounded-3xl p-10 shadow-2xl text-white ${phase.color} transform hover:scale-105 transition-all`}
               >
                 <div className="text-center">
-                  <div className="text-7xl mb-4">{phase.icon}</div>
+                  <div className="mb-4 flex justify-center">{phase.icon}</div>
                   <div className="text-6xl font-black mb-2">{phase.phase}</div>
                   <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-bold mb-4 inline-block">
                     {phase.level}
@@ -238,7 +241,9 @@ const LandingPage: React.FC = () => {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-red-300/30 transform hover:scale-105 transition-all">
-              <div className="text-6xl mb-4">😰</div>
+              <div className="mb-4 flex justify-center">
+                <AlertCircle className="w-16 h-16 text-red-300" />
+              </div>
               <h3 className="text-2xl font-bold mb-3">
                 قبل
               </h3>
@@ -248,7 +253,9 @@ const LandingPage: React.FC = () => {
               <p className="text-sm text-blue-200">Days of chaos</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-yellow-300/50 transform scale-110 hover:scale-115 transition-all shadow-2xl">
-              <div className="text-6xl mb-4">⚡</div>
+              <div className="mb-4 flex justify-center">
+                <Sparkles className="w-16 h-16 text-yellow-300" />
+              </div>
               <h3 className="text-2xl font-bold mb-3">
                 مع {t('app_title')}
               </h3>
@@ -258,7 +265,9 @@ const LandingPage: React.FC = () => {
               <p className="text-sm text-blue-200">Days to excellence</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-green-300/50 transform hover:scale-105 transition-all">
-              <div className="text-6xl mb-4">🏆</div>
+              <div className="mb-4 flex justify-center">
+                <Trophy className="w-16 h-16 text-green-300" />
+              </div>
               <h3 className="text-2xl font-bold mb-3">
                 النتيجة
               </h3>
