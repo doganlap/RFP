@@ -29,7 +29,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         <main
           className={cn(
             'flex-1 relative overflow-y-auto focus:outline-none',
-            !isLandingPage && (sidebarOpen ? 'lg:ml-64' : 'lg:ml-20')
+            isLandingPage ? '' : (sidebarOpen ? 'lg:ml-64' : 'lg:ml-20')
           )}
         >
           {children}
