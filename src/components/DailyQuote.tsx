@@ -59,7 +59,7 @@ const DailyQuote: React.FC<DailyQuoteProps> = ({ language = 'ar' }) => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+    <div className="backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 rounded-lg p-4 shadow-lg">
       <div className="flex items-start gap-3">
         <Quote className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
         <div className="flex-1">
