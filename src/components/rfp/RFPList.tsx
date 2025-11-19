@@ -127,23 +127,23 @@ export const RFPList: React.FC = () => {
       <DailyQuote language={i18n.language as 'ar' | 'en'} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg bg-white shadow p-5">
+        <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg p-5">
           <p className="text-sm text-gray-500">{t('active_rfps')}</p>
-          <p className="text-3xl font-semibold text-gray-900">{rfps.length}</p>
+          <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">{rfps.length}</p>
         </div>
-        <div className="rounded-lg bg-white shadow p-5">
+        <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg p-5">
           <p className="text-sm text-gray-500">{t('total_pipeline_value')}</p>
-          <p className="text-3xl font-semibold text-gray-900">{formatCurrency(totalPipeline)}</p>
+          <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(totalPipeline)}</p>
         </div>
-        <div className="rounded-lg bg-white shadow p-5">
+        <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg p-5">
           <p className="text-sm text-gray-500">{t('go_no_go_ready')}</p>
-          <p className="text-3xl font-semibold text-gray-900">
+          <p className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
             {rfps.filter((rfp) => rfp.stage === 'STAGE_2_BUSINESS_REVIEW').length}
           </p>
         </div>
       </div>
 
-      <div className="rounded-lg bg-white shadow p-6">
+      <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg p-6">
         <h2 className="text-xl font-semibold mb-4">{t('create_new_rfp')}</h2>
         <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateRfp}>
           <div className="col-span-2 md:col-span-1">
@@ -221,8 +221,8 @@ export const RFPList: React.FC = () => {
         </form>
       </div>
 
-      <div className="rounded-lg bg-white shadow">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+      <div className="rounded-lg backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20 shadow-lg">
+        <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-gray-700/50 px-6 py-4">
           <h2 className="text-xl font-semibold">{t('rfps')}</h2>
           {isLoading && <p className="text-sm text-gray-500">{t('refreshing')}</p>}
         </div>
