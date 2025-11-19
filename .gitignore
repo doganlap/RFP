@@ -33,3 +33,5 @@ New Text Document*.txt
 
 # Local Netlify folder
 .netlify
+
+.vercel

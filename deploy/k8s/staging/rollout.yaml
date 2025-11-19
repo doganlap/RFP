@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rfp-app
+  namespace: rfp-staging
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rfp-app
+  template:
+    metadata:
+      labels:
+        app: rfp-app
+    spec:
+      containers:
+        - name: app-container
+          image: ghcr.io/example/rfp-app:latest
+          ports:
+            - containerPort: 8080
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause:
+            duration: 60s
+        - analysis:
+            templates:
+              - templateName: success-rate
+        - setWeight: 50
+        - pause:
+            duration: 120s
+        - analysis:
+            templates:
+              - templateName: success-rate
+        - setWeight: 100

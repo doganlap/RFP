@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose a new idea or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other approaches considered
+  - type: textarea
+    id: impact
+    attributes:
+      label: Risks/Impact
+      description: Security, performance, compatibility considerations

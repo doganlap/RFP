@@ -1,0 +1,37 @@
+name: Security Scans
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Secrets Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_EXIT_CODE: "1"
+
+  trivy:
+    name: Repo Vulnerabilities/Misconfig (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          format: table

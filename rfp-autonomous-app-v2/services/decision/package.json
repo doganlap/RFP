@@ -1,0 +1,10 @@
+{
+  "name": "decision",
+  "version": "0.2.0",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.19.2",
+    "swagger-ui-express": "^5.0.1",
+    "swagger-jsdoc": "^6.2.8"
+  }
+}

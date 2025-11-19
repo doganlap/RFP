@@ -16,24 +16,29 @@ import {
     query,
     setLogLevel
 } from 'firebase/firestore';
+import { RealRFPProcess } from './RealRFPProcess.jsx';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ROUTES } from './config/routes';
+import AppLayout from './components/layout/AppLayout';
+import WinLossAnalysis from './components/WinLossAnalysis';
+import Integrations from './components/settings/Integrations';
+import RFPDetail from './components/rfp/RFPDetail';
 
 // --- Firebase Configuration ---
-const firebaseConfig = typeof __firebase_config !== 'undefined'
+const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config !== '{}'
     ? JSON.parse(__firebase_config)
-    : { apiKey: "DEFAULT_API_KEY", authDomain: "DEFAULT_AUTH_DOMAIN", projectId: "DEFAULT_PROJECT_ID" };
+    : null;
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'rfp-platform-prod';
 
 // Check if we have valid Firebase config
-const hasValidFirebaseConfig = 
-    firebaseConfig.apiKey && 
-    firebaseConfig.apiKey !== 'DEFAULT_API_KEY' && 
-    firebaseConfig.apiKey !== '{}' &&
-    firebaseConfig.projectId && 
-    firebaseConfig.projectId !== 'DEFAULT_PROJECT_ID' &&
+const hasValidFirebaseConfig =
+    firebaseConfig &&
+    firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
     firebaseConfig.authDomain &&
-    firebaseConfig.authDomain !== 'DEFAULT_AUTH_DOMAIN' &&
-    firebaseConfig.apiKey.length > 20; // Valid API keys are typically longer
+    firebaseConfig.apiKey.length > 10 &&
+    firebaseConfig.projectId.length > 5;
 
 // --- Contexts ---
 const FirebaseContext = createContext(null);
@@ -109,32 +114,33 @@ const FirebaseProvider = ({ children }) => {
 };
 
 // --- Main Application Component (Router) ---
-export default function App() {
-    // Simple state-based router
-    // view: { page: 'stage2' | 'stage3', rfpId: string, smeType: 'legal' | 'finance' | 'tech' }
-    const [view, setView] = useState({ page: 'stage2', rfpId: 'RFP-2025-001' });
-
+const App = () => {
     return (
         <FirebaseProvider>
-            <AppContext.Provider value={{ view, setView }}>
-                <div className="antialiased text-gray-900 bg-gray-100 min-h-screen">
-                    <ProductionStatusBanner />
-                    <Header />
-                    {/* --- Simple Router --- */}
-                    {view.page === 'stage2' && <Stage2Dashboard rfpId={view.rfpId} />}
-                    {view.page === 'stage3' && view.smeType === 'legal' && <Stage3Dashboard rfpId={view.rfpId} />}
-                    {view.page === 'stage3' && view.smeType === 'finance' && <Stage3FinanceDashboard rfpId={view.rfpId} />}
-                    {view.page === 'stage3' && view.smeType === 'tech' && <Stage3TechDashboard rfpId={view.rfpId} />}
-                </div>
-            </AppContext.Provider>
+            <AppProvider>
+                <Router>
+                    <AppLayout>
+                        <Routes>
+                            <Route path={ROUTES.HOME} element={<RealRFPProcess />} />
+                            <Route path={ROUTES.DASHBOARD} element={<RealRFPProcess />} />
+                            <Route path={ROUTES.RFP.DETAIL} element={<RFPDetail />} />
+                            <Route path={ROUTES.ANALYSIS.WIN_LOSS} element={<WinLossAnalysis />} />
+                            <Route path={ROUTES.SETTINGS.INTEGRATIONS} element={<Integrations />} />
+                            {/* Add other routes here */}
+                        </Routes>
+                    </AppLayout>
+                </Router>
+            </AppProvider>
         </FirebaseProvider>
     );
-}
+};
+
+export default App;
 
 // --- Production Status Banner ---
 const ProductionStatusBanner = () => {
     const { firebaseError, userId } = useFirebase();
-    
+
     if (!firebaseError) {
         // Production mode - show success banner
         return (
@@ -211,7 +217,8 @@ const Header = () => {
     const { userId } = useFirebase();
     const { setView } = useAppContext();
 
-    // Mock navigation for demo
+    // Navigation for real RFP process and legacy views
+    const goToRealProcess = () => setView({ page: 'real_process', rfpId: 'RFP-2025-001' });
     const goToStage2 = () => setView({ page: 'stage2', rfpId: 'RFP-2025-001' });
     const goToStage3Legal = () => setView({ page: 'stage3', rfpId: 'RFP-2025-001', smeType: 'legal' });
     const goToStage3Finance = () => setView({ page: 'stage3', rfpId: 'RFP-2025-001', smeType: 'finance' });
@@ -227,8 +234,9 @@ const Header = () => {
                         </svg>
                         <h1 className="text-xl font-bold text-gray-800">RFP Qualification Platform</h1>
                     </div>
-                    {/* Demo navigation links */}
+                    {/* Navigation links */}
                     <div className="flex space-x-4">
+                        <button onClick={goToRealProcess} className="text-sm font-medium text-blue-600 hover:text-blue-800 border-b-2 border-blue-600">Real Process</button>
                         <button onClick={goToStage2} className="text-sm font-medium text-gray-600 hover:text-blue-600">Stage 2</button>
                         <button onClick={goToStage3Legal} className="text-sm font-medium text-gray-600 hover:text-blue-600">Legal</button>
                         <button onClick={goToStage3Finance} className="text-sm font-medium text-gray-600 hover:text-blue-600">Finance</button>
@@ -301,8 +309,8 @@ const PRODUCTION_RFP_DATA = {
     duration: "24 months",
     submissionDeadline: "2025-03-15T17:00:00Z",
     triage: {
-        tShirtSize: "XXL", 
-        effortDays: 180, 
+        tShirtSize: "XXL",
+        effortDays: 180,
         value: 25_000_000,
         riskScore: 7.2,
         confidenceLevel: 0.84,
@@ -540,13 +548,7 @@ function Stage2Dashboard({ rfpId }) {
                         setModalState({ isOpen: false });
                         setRfpData(prev => ({ ...prev, status: 'REJECTED (No-Go)' }));
                     } catch (err) {
-                        console.error("Error rejecting RFP:", err);
-                        setModalState({
-                            isOpen: true,
-                            title: "Error",
-                            message: `Failed to save decision: ${err.message}`,
-                            onConfirm: () => setModalState({ isOpen: false })
-                        });
+                        console.error('Error submitting no-go decision:', err);
                     }
                 }
             });
@@ -756,7 +758,7 @@ function Stage3Dashboard({ rfpId }) {
         if (!useMockData && db) {
             try {
                 const itemRef = doc(db, 'artifacts', appId, 'public', 'rfps', rfpId, 'legalQueue', itemId);
-                await updateDoc(itemRef, { 
+                await updateDoc(itemRef, {
                     humanStatus: decision,
                     reviewedAt: new Date().toISOString()
                 });
@@ -884,7 +886,7 @@ function Stage3FinanceDashboard({ rfpId }) {
         if (!useMockData && db) {
             try {
                 const itemRef = doc(db, 'artifacts', appId, 'public', 'rfps', rfpId, 'financeQueue', itemId);
-                await updateDoc(itemRef, { 
+                await updateDoc(itemRef, {
                     humanStatus: decision,
                     reviewedAt: new Date().toISOString()
                 });
@@ -1008,7 +1010,7 @@ function Stage3TechDashboard({ rfpId }) {
         if (!useMockData && db) {
             try {
                 const itemRef = doc(db, 'artifacts', appId, 'public', 'rfps', rfpId, 'techQueue', itemId);
-                await updateDoc(itemRef, { 
+                await updateDoc(itemRef, {
                     humanStatus: decision,
                     reviewedAt: new Date().toISOString()
                 });
