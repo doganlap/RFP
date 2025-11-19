@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  IntakeStage, 
-  GoNoGoStage, 
-  PlanningStage, 
-  SolutioningStage, 
-  PricingStage, 
-  ProposalBuildStage, 
-  ApprovalsStage, 
+import {
+  IntakeStage,
+  GoNoGoStage,
+  PlanningStage,
+  SolutioningStage,
+  PricingStage,
+  ProposalBuildStage,
+  ApprovalsStage,
   SubmissionStage,
-  PostBidStage 
+  PostBidStage
 } from './RFPStages.jsx';
 import TaskManagement from './TaskManagement.jsx';
 import ClarificationsManagement from './ClarificationsManagement.jsx';
 import SLAMonitoring from './SLAMonitoring.jsx';
-
-// Real RFP Process Implementation based on Sales ↔ Pre-Sales Blueprint
+import { apiClient as ApiClient } from './services/ApiClient';// Real RFP Process Implementation based on Sales ↔ Pre-Sales Blueprint
 // States: intake → go_no_go → planning → solutioning → pricing → proposal_build → approvals → submission → post_bid
 
 const RFP_STATES = {
   INTAKE: 'intake',
-  GO_NO_GO: 'go_no_go', 
+  GO_NO_GO: 'go_no_go',
   PLANNING: 'planning',
   SOLUTIONING: 'solutioning',
   PRICING: 'pricing',
@@ -34,7 +33,7 @@ const RFP_STATES = {
 
 const ROLES = {
   SALES_REP: 'sales_rep',
-  SALES_MANAGER: 'sales_manager', 
+  SALES_MANAGER: 'sales_manager',
   PRESALES_LEAD: 'presales_lead',
   SOLUTION_ARCHITECT: 'solution_architect',
   PRICING_FINANCE: 'pricing_finance',
@@ -47,24 +46,75 @@ const ROLES = {
 export const RealRFPProcess = ({ rfpId }) => {
   const [currentState, setCurrentState] = useState(RFP_STATES.INTAKE);
   const [activeTab, setActiveTab] = useState('process');
-  const [rfpData, setRfpData] = useState({
-    id: rfpId,
-    title: "Enterprise Cloud Infrastructure Modernization",
-    client: "JPMorgan Chase & Co.",
-    value: 25000000,
-    deadline: "2025-03-15",
-    category: "Cloud Services",
-    assignedTeam: [],
-    approvals: {},
-    tasks: [],
-    clarifications: []
-  });
+  const [rfpData, setRfpData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch RFP data from API
+  useEffect(() => {
+    const fetchRFPData = async () => {
+      try {
+        setLoading(true);
+        const response = await ApiClient.getRFPById(rfpId);
+        if (response && response.data) {
+          setRfpData(response.data);
+          // Set current state based on fetched data
+          if (response.data.stage) {
+            setCurrentState(response.data.stage);
+          }
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching RFP data:', err);
+        setError('Failed to load RFP data');
+        // Set default data if fetch fails
+        setRfpData({
+          id: rfpId,
+          title: "RFP Data",
+          client: "Loading...",
+          value: 0,
+          deadline: new Date().toISOString().split('T')[0],
+          category: "Unknown",
+          assignedTeam: [],
+          approvals: {},
+          tasks: [],
+          clarifications: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (rfpId) {
+      fetchRFPData();
+    }
+  }, [rfpId]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="bg-white shadow rounded-lg p-6 text-center">
+          <p className="text-gray-600">Loading RFP data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !rfpData) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="bg-white shadow rounded-lg p-6">
+          <p className="text-red-600">{error || 'Failed to load RFP data'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
       <RFPHeader rfpData={rfpData} currentState={currentState} />
       <StateProgressBar currentState={currentState} />
-      
+
       {/* Tab Navigation */}
       <div className="bg-white shadow rounded-lg mb-6">
         <div className="border-b border-gray-200">
@@ -94,8 +144,8 @@ export const RealRFPProcess = ({ rfpId }) => {
 
       {/* Tab Content */}
       {activeTab === 'process' && (
-        <StateContent 
-          currentState={currentState} 
+        <StateContent
+          currentState={currentState}
           rfpData={rfpData}
           setRfpData={setRfpData}
           setCurrentState={setCurrentState}
@@ -157,8 +207,8 @@ const StateProgressBar = ({ currentState }) => {
         {states.map((state, index) => (
           <React.Fragment key={state.key}>
             <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-              index <= currentIndex 
-                ? 'bg-blue-600 text-white' 
+              index <= currentIndex
+                ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-600'
             }`}>
               {index + 1}
@@ -298,7 +348,7 @@ const FinalOutcomeStage = ({ currentState, rfpData }) => {
         <p className={`text-lg text-${outcome.color}-700 mb-6`}>
           {outcome.message}
         </p>
-        
+
         <div className={`bg-${outcome.color}-50 p-4 rounded-lg mb-6`}>
           <h3 className={`font-medium text-${outcome.color}-900 mb-2`}>Contract Details</h3>
           <div className={`text-sm text-${outcome.color}-800`}>
@@ -307,7 +357,7 @@ const FinalOutcomeStage = ({ currentState, rfpData }) => {
             <p>• Duration: {rfpData.duration || '24 months'}</p>
           </div>
         </div>
-        
+
         {outcome.nextSteps.length > 0 && (
           <div className="text-left">
             <h3 className="font-medium text-gray-900 mb-2">Next Steps:</h3>

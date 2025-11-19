@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { apiClient as ApiClient } from './services/ApiClient';
 
 // Task Management Component for RFP Process
 export const TaskManagement = ({ rfpId, currentState }) => {
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [newTask, setNewTask] = useState({
     title: '',
     assignee: '',
@@ -10,88 +13,77 @@ export const TaskManagement = ({ rfpId, currentState }) => {
     priority: 'medium'
   });
 
-  // Generate tasks based on current RFP state
+  // Fetch tasks from API
   useEffect(() => {
-    const generateTasks = (state) => {
-      const taskTemplates = {
-        intake: [
-          { title: 'Review RFP documents', assignee: 'Sales Rep', priority: 'high', days: 1 },
-          { title: 'Initial client contact', assignee: 'Sales Rep', priority: 'medium', days: 2 }
-        ],
-        go_no_go: [
-          { title: 'Complete scoring assessment', assignee: 'Sales Manager', priority: 'high', days: 1 },
-          { title: 'Review competitive landscape', assignee: 'Business Analyst', priority: 'medium', days: 2 }
-        ],
-        planning: [
-          { title: 'Assign team members', assignee: 'Pre-Sales Lead', priority: 'high', days: 1 },
-          { title: 'Create project timeline', assignee: 'PMO', priority: 'medium', days: 2 },
-          { title: 'Generate RACI matrix', assignee: 'Pre-Sales Lead', priority: 'low', days: 1 }
-        ],
-        solutioning: [
-          { title: 'Draft technical architecture', assignee: 'Solution Architect', priority: 'high', days: 5 },
-          { title: 'Map compliance requirements', assignee: 'Compliance Officer', priority: 'high', days: 3 },
-          { title: 'Build Bill of Quantities', assignee: 'Solution Architect', priority: 'medium', days: 4 }
-        ],
-        pricing: [
-          { title: 'Develop cost model', assignee: 'Pricing Analyst', priority: 'high', days: 3 },
-          { title: 'Calculate margins', assignee: 'Finance Manager', priority: 'high', days: 2 },
-          { title: 'Request discount approvals', assignee: 'Sales Manager', priority: 'medium', days: 1 }
-        ],
-        proposal_build: [
-          { title: 'Write technical volume', assignee: 'Proposal Writer', priority: 'high', days: 7 },
-          { title: 'Compile commercial volume', assignee: 'Pricing Analyst', priority: 'high', days: 3 },
-          { title: 'Create executive summary', assignee: 'Pre-Sales Lead', priority: 'medium', days: 2 },
-          { title: 'Complete QA checklist', assignee: 'Quality Reviewer', priority: 'high', days: 1 }
-        ],
-        approvals: [
-          { title: 'Technical review and signoff', assignee: 'Pre-Sales Lead', priority: 'high', days: 2 },
-          { title: 'Financial review and approval', assignee: 'Finance Manager', priority: 'high', days: 2 },
-          { title: 'Legal review and clearance', assignee: 'Legal Counsel', priority: 'high', days: 3 },
-          { title: 'Compliance final check', assignee: 'Compliance Officer', priority: 'medium', days: 1 }
-        ],
-        submission: [
-          { title: 'Package final documents', assignee: 'Proposal Writer', priority: 'high', days: 1 },
-          { title: 'Submit via client portal', assignee: 'Sales Rep', priority: 'high', days: 1 },
-          { title: 'Confirm receipt', assignee: 'Sales Rep', priority: 'medium', days: 1 }
-        ]
-      };
-
-      const templates = taskTemplates[state] || [];
-      const today = new Date();
-      
-      return templates.map((template, index) => ({
-        id: `${state}-${index}`,
-        title: template.title,
-        assignee: template.assignee,
-        due_date: new Date(today.getTime() + template.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        priority: template.priority,
-        status: 'todo',
-        created_at: new Date().toISOString()
-      }));
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const response = await ApiClient.getTasks(rfpId);
+        if (response && response.data) {
+          setTasks(Array.isArray(response.data) ? response.data : []);
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching tasks:', err);
+        setError('Failed to load tasks');
+        setTasks([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTasks(generateTasks(currentState));
-  }, [currentState]);
+    if (rfpId) {
+      fetchTasks();
+    }
+  }, [rfpId]);
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!newTask.title.trim()) return;
-    
-    const task = {
-      id: `custom-${Date.now()}`,
-      ...newTask,
-      status: 'todo',
-      created_at: new Date().toISOString()
-    };
-    
-    setTasks([...tasks, task]);
-    setNewTask({ title: '', assignee: '', due_date: '', priority: 'medium' });
+
+    try {
+      const taskData = {
+        ...newTask,
+        rfpId,
+        status: 'todo'
+      };
+      const response = await ApiClient.createTask(taskData);
+      if (response && response.data) {
+        setTasks([...tasks, response.data]);
+        setNewTask({ title: '', assignee: '', due_date: '', priority: 'medium' });
+      }
+    } catch (err) {
+      console.error('Error adding task:', err);
+      alert('Failed to add task');
+    }
   };
 
-  const updateTaskStatus = (taskId, newStatus) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
+  const updateTaskStatus = async (taskId, newStatus) => {
+    try {
+      await ApiClient.updateTask(taskId, { status: newStatus });
+      setTasks(tasks.map(task =>
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+    } catch (err) {
+      console.error('Error updating task:', err);
+      alert('Failed to update task');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white shadow rounded-lg p-6 text-center">
+        <p className="text-gray-600">Loading tasks...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white shadow rounded-lg p-6">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   const getPriorityColor = (priority) => {
     switch (priority) {

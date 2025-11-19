@@ -1,4 +1,5 @@
 // src/services/AnalyticsService.ts
+import { apiClient as ApiClient } from './ApiClient';
 
 export interface WinLossRecord {
   id: string;
@@ -13,26 +14,44 @@ export interface WinLossData {
   lost: WinLossRecord[];
 }
 
+export interface AnalyticsData {
+  statistics: {
+    total_rfps: number;
+    won: number;
+    lost: number;
+    no_decision: number;
+    total_value: number;
+    avg_value: number;
+  };
+  winRate: string;
+  topLossReasons: Array<{ reason: string; count: number }>;
+  byStage: Array<{ stage: string; count: number; avg_value: number }>;
+}
+
 class AnalyticsService {
   async getWinLossData(): Promise<WinLossData> {
     try {
-      // In production, this would call your API endpoint
-      // const response = await fetch('/api/analytics/win-loss');
-      // return response.json();
+      // Fetch real data from API
+      const analytics = await ApiClient.getAnalytics() as any;
 
-      // Mock data for now
-      return Promise.resolve({
-        won: [
-          { id: 'RFP001', rfpNumber: 'RFP-2025-001', reason: 'Better pricing', value: 150000, date: '2025-01-15' },
-          { id: 'RFP003', rfpNumber: 'RFP-2025-003', reason: 'Stronger technical solution', value: 250000, date: '2025-01-20' },
-          { id: 'RFP005', rfpNumber: 'RFP-2025-005', reason: 'Existing relationship', value: 180000, date: '2025-02-01' },
-        ],
-        lost: [
-          { id: 'RFP002', rfpNumber: 'RFP-2025-002', reason: 'Incumbent relationship', value: 200000, date: '2025-01-18' },
-          { id: 'RFP004', rfpNumber: 'RFP-2025-004', reason: 'Missing key features', value: 320000, date: '2025-01-25' },
-          { id: 'RFP006', rfpNumber: 'RFP-2025-006', reason: 'Price objection', value: 145000, date: '2025-02-05' },
-        ],
-      });
+      if (!analytics || !analytics.data) {
+        return { won: [], lost: [] };
+      }
+
+      const data = analytics.data;
+
+      // Transform API response to WinLossData format
+      // In a real scenario, the API would return this directly
+      // For now, we construct it from the analytics data
+      return {
+        won: [], // These would come from the rfp/win-loss endpoint
+        lost: (data.topLossReasons || []).map((item: any, idx: number) => ({
+          id: `loss-${idx}`,
+          reason: item.reason,
+          value: 0,
+          date: new Date().toISOString().split('T')[0],
+        })),
+      };
     } catch (error) {
       console.error('Error fetching win/loss data:', error);
       return { won: [], lost: [] };
@@ -41,16 +60,21 @@ class AnalyticsService {
 
   async getWinReasons(): Promise<Record<string, number>> {
     try {
-      // In production, this would call your API endpoint
-      // const response = await fetch('/api/analytics/win-reasons');
-      // return response.json();
+      // Fetch from the dedicated win-loss analysis endpoint
+      const response = await ApiClient.getWinLossAnalysis() as any;
 
-      const data = await this.getWinLossData();
+      if (!response || !response.data) {
+        return {};
+      }
+
       const reasons: Record<string, number> = {};
 
-      data.won.forEach((record) => {
-        reasons[record.reason] = (reasons[record.reason] || 0) + 1;
-      });
+      // Process won records
+      if (Array.isArray(response.data.won)) {
+        response.data.won.forEach((record: any) => {
+          reasons[record.reason] = (reasons[record.reason] || 0) + 1;
+        });
+      }
 
       return reasons;
     } catch (error) {
@@ -61,16 +85,21 @@ class AnalyticsService {
 
   async getLossReasons(): Promise<Record<string, number>> {
     try {
-      // In production, this would call your API endpoint
-      // const response = await fetch('/api/analytics/loss-reasons');
-      // return response.json();
+      // Fetch analytics data which includes top loss reasons
+      const response = await ApiClient.getAnalytics() as any;
 
-      const data = await this.getWinLossData();
+      if (!response || !response.data) {
+        return {};
+      }
+
       const reasons: Record<string, number> = {};
 
-      data.lost.forEach((record) => {
-        reasons[record.reason] = (reasons[record.reason] || 0) + 1;
-      });
+      // Process top loss reasons from analytics
+      if (Array.isArray(response.data.topLossReasons)) {
+        response.data.topLossReasons.forEach((item: any) => {
+          reasons[item.reason] = item.count;
+        });
+      }
 
       return reasons;
     } catch (error) {
@@ -81,15 +110,34 @@ class AnalyticsService {
 
   async getWinRateByCategory(category: string): Promise<number> {
     try {
-      // In production, this would call your API endpoint
-      // const response = await fetch(`/api/analytics/win-rate?category=${category}`);
-      // return response.json();
+      // Fetch analytics data which includes overall win rate
+      const response = await ApiClient.getAnalytics() as any;
 
-      // Mock calculation
-      return 65.5;
+      if (!response || !response.data) {
+        return 0;
+      }
+
+      // Return the win rate percentage as a number (e.g., 65.43 for 65.43%)
+      return parseFloat(response.data.winRate || '0');
     } catch (error) {
       console.error('Error fetching win rate:', error);
       return 0;
+    }
+  }
+
+  async getAnalyticsData(): Promise<AnalyticsData | null> {
+    try {
+      // Fetch complete analytics data from API
+      const response = await ApiClient.getAnalytics() as any;
+
+      if (!response || !response.data) {
+        return null;
+      }
+
+      return response.data as AnalyticsData;
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      return null;
     }
   }
 }

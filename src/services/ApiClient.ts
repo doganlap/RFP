@@ -84,9 +84,15 @@ class ApiClient {
   }
 
   updateRFP(id: string, data: any) {
-    return this.request(`/api/rfp/${id}`, {
+    return this.request(`/api/rfp/detail?id=${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  }
+
+  deleteRFP(id: string) {
+    return this.request(`/api/rfp/detail?id=${id}`, {
+      method: 'DELETE',
     });
   }
 
@@ -131,6 +137,11 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ rfpId, userId }),
     });
+  }
+
+  // Analytics endpoints
+  getAnalytics() {
+    return this.request('/api/analysis/analytics');
   }
 
   // Health check
