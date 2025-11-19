@@ -5,6 +5,7 @@ import type { RFP } from '../../types';
 import { Priority } from '../../types';
 import { ROUTES, getRoute } from '../../config/routes';
 import { useTranslation } from 'react-i18next';
+import DailyQuote from '../DailyQuote';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -122,6 +123,8 @@ export const RFPList: React.FC = () => {
           {t('real_time_pipeline')}
         </p>
       </div>
+
+      <DailyQuote language={i18n.language as 'ar' | 'en'} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-lg bg-white shadow p-5">
