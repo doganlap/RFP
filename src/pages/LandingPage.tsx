@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Shield,
   CheckCircle,
-  Zap,
   Award,
   Users
 } from 'lucide-react';
@@ -22,76 +21,78 @@ const LandingPage: React.FC = () => {
 
   const valueProps = [
     {
-      icon: <Rocket className="w-8 h-8" />,
-      title: 'Faster Bid Preparation',
-      description: 'Cut RFP response time by 60% with AI-assisted content generation and automated workflow routing',
+      icon: <Rocket className="w-12 h-12" />,
+      titleEn: 'Faster Bid Preparation',
+      titleAr: 'تحضير أسرع للعروض',
+      metric: '-60%',
+      metricLabel: 'وقت أقل',
       color: 'from-blue-500 to-blue-600'
     },
     {
-      icon: <Target className="w-8 h-8" />,
-      title: 'Higher Win Rates',
-      description: 'Increase win rate from 45% to 68% with data-driven insights, competitor analysis, and win/loss analytics',
+      icon: <Target className="w-12 h-12" />,
+      titleEn: 'Higher Win Rates',
+      titleAr: 'معدل فوز أعلى',
+      metric: '+51%',
+      metricLabel: 'زيادة في الفوز',
       color: 'from-purple-500 to-purple-600'
     },
     {
-      icon: <BarChart3 className="w-8 h-8" />,
-      title: 'Real-time Visibility & KPIs',
-      description: 'Executive dashboards with live metrics: active RFPs, revenue targets, team performance, and agency goals',
+      icon: <BarChart3 className="w-12 h-12" />,
+      titleEn: 'Real-time Analytics',
+      titleAr: 'تحليلات فورية',
+      metric: '100%',
+      metricLabel: 'رؤية كاملة',
       color: 'from-green-500 to-green-600'
     },
     {
-      icon: <Bot className="w-8 h-8" />,
-      title: 'AI-Powered Collaboration',
-      description: 'Automated task assignment, SME coordination, compliance checks, and intelligent document analysis',
+      icon: <Bot className="w-12 h-12" />,
+      titleEn: 'AI Automation',
+      titleAr: 'أتمتة ذكية',
+      metric: '+85%',
+      metricLabel: 'إنتاجية',
       color: 'from-orange-500 to-orange-600'
     }
   ];
 
   const phases = [
     {
-      phase: 'Phase 1',
-      title: 'Assist & Insights',
-      status: 'Now',
-      items: [
-        'AI-suggested responses and content templates',
-        'Manual task assignment with automated notifications',
-        'Win/loss analytics and KPI dashboards',
-        'Multi-language support (Arabic/English)'
-      ],
-      color: 'bg-blue-500'
+      phase: '١',
+      level: 'L1-L2',
+      titleEn: 'Co-Pilot',
+      titleAr: 'مساعد ذكي',
+      status: 'الآن • Now',
+      icon: '🤝',
+      features: ['AI Suggestions', 'اقتراحات ذكية', 'Analytics', 'تحليلات فورية'],
+      color: 'bg-gradient-to-br from-blue-500 to-blue-600'
     },
     {
-      phase: 'Phase 2',
-      title: 'Semi-Autonomous Workflows',
+      phase: '٢',
+      level: 'L2-L3',
+      titleEn: 'Semi-Auto',
+      titleAr: 'شبه آلي',
       status: 'Q1-Q2 2025',
-      items: [
-        'Auto-assignment based on expertise and workload',
-        'AI-generated first draft with compliance verification',
-        'Predictive win probability scoring',
-        'Automated pricing optimization'
-      ],
-      color: 'bg-purple-500'
+      icon: '⚡',
+      features: ['Auto-Assignment', 'تعيين تلقائي', 'AI Drafts', 'مسودات ذكية'],
+      color: 'bg-gradient-to-br from-purple-500 to-purple-600'
     },
     {
-      phase: 'Phase 3',
-      title: 'Autonomous Bid Management',
+      phase: '٣',
+      level: 'L3',
+      titleEn: 'Autonomous',
+      titleAr: 'مستقل تماماً',
       status: 'Q3-Q4 2025',
-      items: [
-        'Self-optimizing bid strategies from historical data',
-        'Auto-escalation of critical deadlines and risks',
-        'Closed-loop learning from won/lost bids',
-        'Zero-touch proposal generation'
-      ],
-      color: 'bg-green-500'
+      icon: '🚀',
+      features: ['Self-Learning', 'تعلم ذاتي', 'Zero-Touch', 'تلقائي كامل'],
+      color: 'bg-gradient-to-br from-green-500 to-green-600'
     }
   ];
 
   const metrics = [
-    { label: 'Time to Prepare Proposals', value: '-60%', icon: <Clock className="w-6 h-6" /> },
-    { label: 'Win Rate Improvement', value: '+51%', icon: <TrendingUp className="w-6 h-6" /> },
-    { label: 'Team Productivity', value: '+85%', icon: <Users className="w-6 h-6" /> },
-    { label: 'Compliance Traceability', value: '100%', icon: <Shield className="w-6 h-6" /> },
-    { label: 'Revenue Growth', value: '+35%', icon: <Award className="w-6 h-6" /> }
+    { labelEn: 'Time Saved', labelAr: 'وقت موفر', value: '60%', icon: <Clock className="w-8 h-8" />, color: 'from-blue-500 to-blue-600' },
+    { labelEn: 'Win Rate', labelAr: 'معدل الفوز', value: '68%', icon: <TrendingUp className="w-8 h-8" />, color: 'from-green-500 to-green-600' },
+    { labelEn: 'Productivity', labelAr: 'إنتاجية', value: '+85%', icon: <Users className="w-8 h-8" />, color: 'from-purple-500 to-purple-600' },
+    { labelEn: 'Compliance', labelAr: 'امتثال', value: '100%', icon: <Shield className="w-8 h-8" />, color: 'from-orange-500 to-orange-600' },
+    { labelEn: 'Revenue', labelAr: 'إيرادات', value: '+35%', icon: <Award className="w-8 h-8" />, color: 'from-pink-500 to-pink-600' }
   ];
 
   return (
@@ -151,17 +152,26 @@ const LandingPage: React.FC = () => {
           {valueProps.map((prop, index) => (
             <div
               key={index}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2"
+              className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 overflow-hidden"
             >
-              <div className={`inline-flex p-4 rounded-xl bg-gradient-to-r ${prop.color} text-white mb-6`}>
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${prop.color} opacity-10 rounded-full -mr-16 -mt-16`}></div>
+              <div className={`inline-flex p-6 rounded-2xl bg-gradient-to-r ${prop.color} text-white mb-6 shadow-lg`}>
                 {prop.icon}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                {prop.title}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                {prop.description}
-              </p>
+              <div className="text-center">
+                <div className="text-5xl font-black text-gray-900 dark:text-white mb-2">
+                  {prop.metric}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  {prop.metricLabel}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  {prop.titleEn}
+                </h3>
+                <p className="text-base font-semibold text-gray-700 dark:text-gray-300" dir="rtl">
+                  {prop.titleAr}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -182,30 +192,35 @@ const LandingPage: React.FC = () => {
             {phases.map((phase, index) => (
               <div
                 key={index}
-                className="relative bg-gray-50 dark:bg-gray-900 rounded-2xl p-8 shadow-lg"
+                className={`relative rounded-3xl p-10 shadow-2xl text-white ${phase.color} transform hover:scale-105 transition-all`}
               >
-                <div className={`absolute top-0 left-0 right-0 h-2 ${phase.color} rounded-t-2xl`}></div>
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {phase.phase}
-                  </span>
-                  <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
+                <div className="text-center">
+                  <div className="text-7xl mb-4">{phase.icon}</div>
+                  <div className="text-6xl font-black mb-2">{phase.phase}</div>
+                  <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-bold mb-4 inline-block">
+                    {phase.level}
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">
+                    {phase.titleEn}
+                  </h3>
+                  <p className="text-xl font-semibold mb-4" dir="rtl">
+                    {phase.titleAr}
+                  </p>
+                  <div className="text-sm opacity-90 mb-6">
                     {phase.status}
-                  </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {phase.features.map((feature, idx) => (
+                      <div
+                        key={idx}
+                        className="px-3 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-xs font-medium"
+                        dir={idx % 2 === 0 ? 'ltr' : 'rtl'}
+                      >
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                  {phase.title}
-                </h3>
-                <ul className="space-y-3">
-                  {phase.items.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-400 text-sm">
-                        {item}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
               </div>
             ))}
           </div>
@@ -215,33 +230,42 @@ const LandingPage: React.FC = () => {
       {/* Practical Scenario */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-white shadow-2xl">
-          <h2 className="text-3xl font-bold mb-8 text-center">
-            Real Enterprise Transformation
+          <h2 className="text-4xl font-bold mb-4 text-center">
+            التحول المؤسسي
           </h2>
+          <p className="text-xl text-center text-blue-100 mb-12">
+            Enterprise Transformation Journey
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <span className="text-red-300">❌</span> Before
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-red-300/30 transform hover:scale-105 transition-all">
+              <div className="text-6xl mb-4">😰</div>
+              <h3 className="text-2xl font-bold mb-3">
+                قبل
               </h3>
-              <p className="text-blue-100">
-                15 days coordinating between teams. Email chains, missed requirements, rushed submission 2 hours before deadline.
-              </p>
+              <p className="text-sm text-blue-100 mb-2">Before</p>
+              <div className="text-7xl font-black text-red-300 mb-2">15</div>
+              <p className="text-lg font-semibold">أيام</p>
+              <p className="text-sm text-blue-200">Days of chaos</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-yellow-300" /> With {t('app_title')}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-yellow-300/50 transform scale-110 hover:scale-115 transition-all shadow-2xl">
+              <div className="text-6xl mb-4">⚡</div>
+              <h3 className="text-2xl font-bold mb-3">
+                مع {t('app_title')}
               </h3>
-              <p className="text-blue-100">
-                AI extracts 120 requirements instantly. Real-time collaboration. Automated compliance checks. 72% win probability predicted.
-              </p>
+              <p className="text-sm text-blue-100 mb-2">With AI Power</p>
+              <div className="text-7xl font-black text-yellow-300 mb-2">5</div>
+              <p className="text-lg font-semibold">أيام</p>
+              <p className="text-sm text-blue-200">Days to excellence</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-300" /> Result
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border-2 border-green-300/50 transform hover:scale-105 transition-all">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-bold mb-3">
+                النتيجة
               </h3>
-              <p className="text-blue-100">
-                Completed in 5 days. Submitted 48 hours early. Quality score +40%. Won with highest technical score.
-              </p>
+              <p className="text-sm text-blue-100 mb-2">Result</p>
+              <div className="text-7xl font-black text-green-300 mb-2">72%</div>
+              <p className="text-lg font-semibold">فوز</p>
+              <p className="text-sm text-blue-200">Win probability</p>
             </div>
           </div>
         </div>
@@ -258,20 +282,24 @@ const LandingPage: React.FC = () => {
               Measurable transformation across your organization
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {metrics.map((metric, index) => (
               <div
                 key={index}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg text-center hover:shadow-2xl transition-all transform hover:scale-105"
+                className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg text-center hover:shadow-2xl transition-all transform hover:scale-110 overflow-hidden"
               >
-                <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 mb-4">
+                <div className={`absolute inset-0 bg-gradient-to-br ${metric.color} opacity-5`}></div>
+                <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${metric.color} text-white mb-4 shadow-lg relative z-10`}>
                   {metric.icon}
                 </div>
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                <div className="text-5xl font-black bg-gradient-to-r text-transparent bg-clip-text from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-3 relative z-10">
                   {metric.value}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {metric.label}
+                <div className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 relative z-10">
+                  {metric.labelEn}
+                </div>
+                <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 relative z-10" dir="rtl">
+                  {metric.labelAr}
                 </div>
               </div>
             ))}
