@@ -340,6 +340,9 @@
   "update_limits": "تحديث الحدود",
   "analytics_dashboard": "لوحة التحليلات",
   "win_loss_analysis": "تحليل الفوز والخسارة",
+  "dashboard": "لوحة التحكم",
+  "team": "الفريق",
+  "settings": "الإعدادات",
   "all_time": "كل الوقت",
   "last_3_months": "آخر 3 أشهر",
   "last_6_months": "آخر 6 أشهر",
@@ -387,5 +390,4 @@
       "clickToSort": "انقر على عناوين الأعمدة للترتيب"
     }
   }
-}
 }

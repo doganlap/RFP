@@ -340,6 +340,9 @@
   "update_limits": "Update Limits",
   "analytics_dashboard": "Analytics Dashboard",
   "win_loss_analysis": "Win/Loss Analysis",
+  "dashboard": "Dashboard",
+  "team": "Team",
+  "settings": "Settings",
   "all_time": "All Time",
   "last_3_months": "Last 3 Months",
   "last_6_months": "Last 6 Months",
@@ -387,5 +390,4 @@
       "clickToSort": "Click column headers to sort data"
     }
   }
-}
 }
