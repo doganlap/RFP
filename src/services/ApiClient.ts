@@ -17,7 +17,7 @@ class ApiClient {
   private token: string | null;
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string = API_URL) {
+  constructor(baseUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:3001') {
     this.baseUrl = baseUrl;
     this.token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   }

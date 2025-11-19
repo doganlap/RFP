@@ -6,6 +6,7 @@
 [![React](https://img.shields.io/badge/React-18.2-blue)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.0-646CFF)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -241,6 +242,12 @@ See [.env.production.example](.env.production.example)
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ---
 
