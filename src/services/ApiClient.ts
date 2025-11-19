@@ -1,14 +1,14 @@
 // Production API Client Service
 // src/services/ApiClient.ts
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.your-domain.com';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 class ApiClient {
   constructor() {
     this.token = localStorage.getItem('authToken');
   }
 
-  setToken(token) {
+  setToken(token: string) {
     this.token = token;
     localStorage.setItem('authToken', token);
   }
@@ -18,9 +18,9 @@ class ApiClient {
     localStorage.removeItem('authToken');
   }
 
-  async request(endpoint, options = {}) {
+  async request(endpoint: string, options: any = {}) {
     const url = `${API_URL}${endpoint}`;
-    const headers = {
+    const headers: any = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -37,7 +37,7 @@ class ApiClient {
 
       if (response.status === 401) {
         this.clearToken();
-        window.location.href = '/login';
+        // window.location.href = '/login';
       }
 
       const data = await response.json();
@@ -54,7 +54,7 @@ class ApiClient {
   }
 
   // Auth endpoints
-  login(email, password) {
+  login(email: string, password: string) {
     return this.request('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
@@ -72,18 +72,18 @@ class ApiClient {
     return this.request(url);
   }
 
-  getRFPById(id) {
+  getRFPById(id: string) {
     return this.request(`/api/rfp/${id}`);
   }
 
-  createRFP(data) {
+  createRFP(data: any) {
     return this.request('/api/rfp/create', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  updateRFP(id, data) {
+  updateRFP(id: string, data: any) {
     return this.request(`/api/rfp/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -91,11 +91,11 @@ class ApiClient {
   }
 
   // Win/Loss endpoints
-  getWinLossAnalysis(rfpId) {
+  getWinLossAnalysis(rfpId: string) {
     return this.request(`/api/analysis/win-loss/${rfpId}`);
   }
 
-  createWinLossRecord(data) {
+  createWinLossRecord(data: any) {
     return this.request('/api/analysis/win-loss', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -103,18 +103,18 @@ class ApiClient {
   }
 
   // Task endpoints
-  getTasks(rfpId) {
+  getTasks(rfpId: string) {
     return this.request(`/api/tasks?rfpId=${rfpId}`);
   }
 
-  createTask(data) {
+  createTask(data: any) {
     return this.request('/api/tasks', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  updateTask(id, data) {
+  updateTask(id: string, data: any) {
     return this.request(`/api/tasks/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -122,11 +122,11 @@ class ApiClient {
   }
 
   // Collaboration endpoints
-  getCollaborators(rfpId) {
+  getCollaborators(rfpId: string) {
     return this.request(`/api/collaboration/collaborators/${rfpId}`);
   }
 
-  addCollaborator(rfpId, userId) {
+  addCollaborator(rfpId: string, userId: string) {
     return this.request(`/api/collaboration/add`, {
       method: 'POST',
       body: JSON.stringify({ rfpId, userId }),
