@@ -128,7 +128,7 @@ const FirebaseProvider = ({ children }) => {
 
     return (
         <FirebaseContext.Provider value={{ auth, db, userId, isAuthReady, appId, firebaseError }}>
-            {isAuthReady ? children : <LoadingScreen message="Connecting to workspace..." />}
+            {isAuthReady ? children : <LoadingScreen message="Initializing application..." />}
         </FirebaseContext.Provider>
     );
 };
@@ -143,10 +143,11 @@ const App = () => {
                         <Routes>
                             <Route path={ROUTES.HOME} element={<RealRFPProcess />} />
                             <Route path={ROUTES.DASHBOARD} element={<RealRFPProcess />} />
+                            <Route path={ROUTES.RFP.LIST} element={<RealRFPProcess />} />
                             <Route path={ROUTES.RFP.DETAIL} element={<RFPDetail />} />
                             <Route path={ROUTES.ANALYSIS.WIN_LOSS} element={<WinLossAnalysis />} />
                             <Route path={ROUTES.SETTINGS.INTEGRATIONS} element={<Integrations />} />
-                            {/* Add other routes here */}
+                            <Route path="*" element={<RealRFPProcess />} />
                         </Routes>
                     </AppLayout>
                 </Router>
