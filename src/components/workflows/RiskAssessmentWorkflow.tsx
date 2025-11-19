@@ -179,6 +179,7 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
                 Risk Category
               </label>
               <select
+                title="Risk Category"
                 value={newRisk.category}
                 onChange={(e) => setNewRisk({ ...newRisk, category: e.target.value as RiskCategory })}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -224,6 +225,7 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
                 Probability
               </label>
               <select
+                title="Probability"
                 value={newRisk.probability}
                 onChange={(e) => setNewRisk({ ...newRisk, probability: e.target.value as any })}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -239,6 +241,7 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
                 Impact
               </label>
               <select
+                title="Impact"
                 value={newRisk.impact}
                 onChange={(e) => setNewRisk({ ...newRisk, impact: e.target.value as any })}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -312,6 +315,8 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
                         <button
                           onClick={() => removeRisk(risk.id)}
                           className="text-red-600 hover:text-red-800"
+                          title="Delete risk"
+                          aria-label="Delete risk"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -345,6 +350,7 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
 
                     <div className="mt-3">
                       <select
+                        title="Risk Status"
                         value={risk.status}
                         onChange={(e) => updateRisk(risk.id, { status: e.target.value as any })}
                         className="text-sm rounded-md border-gray-300"
