@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   IntakeStage,
   GoNoGoStage,
@@ -67,6 +68,7 @@ export const RealRFPProcess = ({ rfpId }) => {
   const routeRfpId = params?.id;
   const derivedRfpId = rfpId || routeRfpId || null;
   const { rfps, fetchRFPs, loadRFP, setCurrentRFP } = useRFP();
+  const { t } = useTranslation();
 
   const [currentState, setCurrentState] = useState(RFP_STATES.INTAKE);
   const [activeTab, setActiveTab] = useState('process');
@@ -78,7 +80,7 @@ export const RealRFPProcess = ({ rfpId }) => {
     if (!rfps.length) {
       fetchRFPs().catch((err) => {
         console.error('Error fetching RFPs list:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load RFP list');
+        setError(err instanceof Error ? err.message : t('failed_to_load_rfp_list'));
       });
     }
   }, [rfps.length, fetchRFPs]);
@@ -88,7 +90,7 @@ export const RealRFPProcess = ({ rfpId }) => {
 
     if (!targetId) {
       setLoading(false);
-      setError('No RFPs available. Create one from the RFP list to get started.');
+      setError(t('no_rfps_available'));
       return;
     }
 
@@ -99,7 +101,7 @@ export const RealRFPProcess = ({ rfpId }) => {
       .then((rfp) => {
         if (!isMounted) return;
         if (!rfp) {
-          setError('RFP not found');
+          setError(t('rfp_not_found'));
           return;
         }
 
@@ -120,7 +122,7 @@ export const RealRFPProcess = ({ rfpId }) => {
       .catch((err) => {
         if (!isMounted) return;
         console.error('Error fetching RFP data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load RFP data');
+        setError(err instanceof Error ? err.message : t('failed_to_load_rfp_data'));
       })
       .finally(() => {
         if (isMounted) {
@@ -137,7 +139,7 @@ export const RealRFPProcess = ({ rfpId }) => {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="bg-white shadow rounded-lg p-6 text-center">
-          <p className="text-gray-600">Loading RFP data...</p>
+          <p className="text-gray-600">{t('loading_rfp_data')}</p>
         </div>
       </div>
     );
@@ -147,7 +149,7 @@ export const RealRFPProcess = ({ rfpId }) => {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="bg-white shadow rounded-lg p-6">
-          <p className="text-red-600">{error || 'Failed to load RFP data'}</p>
+          <p className="text-red-600">{error || t('failed_to_load_rfp_data')}</p>
         </div>
       </div>
     );

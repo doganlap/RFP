@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // SLA Monitoring Dashboard Component
 export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
+  const { t } = useTranslation();
   const [slaMetrics, setSlaMetrics] = useState({
     clarification_response: { target: 48, actual: 36, status: 'on_track' },
     internal_review: { target: 24, actual: 18, status: 'ahead' },
@@ -24,14 +26,14 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
     {
       id: 'alert-001',
       type: 'warning',
-      message: 'Legal review approaching SLA deadline (4 hours remaining)',
+      message: t('legal_review_approaching_sla'),
       stage: 'approvals',
       created_at: new Date().toISOString()
     },
     {
       id: 'alert-002',
       type: 'info',
-      message: 'Compliance mapping completed ahead of schedule',
+      message: t('compliance_mapping_completed_ahead'),
       stage: 'solutioning',
       created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     }
@@ -72,7 +74,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
     const aheadCount = metrics.filter(m => m.status === 'ahead').length;
     const onTrackCount = metrics.filter(m => m.status === 'on_track').length;
     const overdueCount = metrics.filter(m => m.status === 'overdue').length;
-    
+
     if (overdueCount > 0) return { status: 'at_risk', score: 60 };
     if (aheadCount > onTrackCount) return { status: 'excellent', score: 95 };
     return { status: 'good', score: 85 };
@@ -84,7 +86,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
@@ -95,7 +97,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
       {/* Overall Health Score */}
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">SLA Health Dashboard</h2>
+          <h2 className="text-xl font-semibold">{t('sla_health_dashboard')}</h2>
           <div className="flex items-center space-x-2">
             <div className={`w-4 h-4 rounded-full ${
               overallHealth.status === 'excellent' ? 'bg-green-500' :
@@ -105,7 +107,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
             <span className="font-medium">{overallHealth.score}% Health Score</span>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Object.entries(slaMetrics).map(([key, metric]) => (
             <div key={key} className="bg-gray-50 p-4 rounded-lg">
@@ -119,9 +121,9 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
                 </span>
               </div>
               <div className="text-xs text-gray-500">
-                Target: {metric.target}h | 
-                {metric.actual <= metric.target ? 
-                  ` ${metric.target - metric.actual}h ahead` : 
+                Target: {metric.target}h |
+                {metric.actual <= metric.target ?
+                  ` ${metric.target - metric.actual}h ahead` :
                   ` ${metric.actual - metric.target}h overdue`
                 }
               </div>
@@ -132,7 +134,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
 
       {/* Stage Timeline Progress */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Stage Timeline Progress</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('stage_timeline_progress')}</h3>
         <div className="space-y-3">
           {Object.entries(stageTimelines).map(([stage, timeline]) => (
             <div key={stage} className="flex items-center space-x-4">
@@ -140,15 +142,15 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
                 {stage.replace('_', ' ')}
               </div>
               <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className={`h-2 rounded-full ${
                     timeline.status === 'completed' ? 'bg-green-500' :
                     timeline.status === 'current' ? 'bg-blue-500' :
                     'bg-gray-300'
                   }`}
-                  style={{ 
-                    width: timeline.status === 'completed' ? '100%' : 
-                           timeline.status === 'current' ? '60%' : '0%' 
+                  style={{
+                    width: timeline.status === 'completed' ? '100%' :
+                           timeline.status === 'current' ? '60%' : '0%'
                   }}
                 ></div>
               </div>
@@ -169,7 +171,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
 
       {/* Active Alerts */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Active Alerts & Notifications</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('active_alerts_notifications')}</h3>
         {alerts.length > 0 ? (
           <div className="space-y-3">
             {alerts.map(alert => (
@@ -195,7 +197,7 @@ export const SLAMonitoring = ({ rfpId, currentState, rfpData }) => {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-2">🎯</div>
-            <p>All SLAs on track - no active alerts</p>
+            <p>{t('all_slas_on_track')}</p>
           </div>
         )}
       </div>

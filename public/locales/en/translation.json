@@ -125,5 +125,14 @@
   "to_do": "To Do",
   "in_progress": "In Progress",
   "blocked": "Blocked",
-  "done": "Done"
+  "done": "Done",
+  "loading_rfp_data": "Loading RFP data...",
+  "no_rfps_available": "No RFPs available. Create one from the RFP list to get started.",
+  "failed_to_load_rfp_list": "Failed to load RFP list",
+  "failed_to_load_rfp_data": "Failed to load RFP data",
+  "rfp_not_found": "RFP not found",
+  "sla_health_dashboard": "SLA Health Dashboard",
+  "stage_timeline_progress": "Stage Timeline Progress",
+  "active_alerts_notifications": "Active Alerts & Notifications",
+  "all_slas_on_track": "All SLAs on track - no active alerts"
 }
