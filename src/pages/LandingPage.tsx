@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  ArrowRight, 
-  Rocket, 
-  Target, 
-  BarChart3, 
+import {
+  ArrowRight,
+  Rocket,
+  Target,
+  BarChart3,
   Bot,
   Clock,
   TrendingUp,
@@ -301,7 +301,7 @@ const LandingPage: React.FC = () => {
             <p className="text-lg text-blue-50 max-w-3xl mx-auto">
               <strong>Target: L3 – Autonomous Bid Intelligence by Q4 2025</strong>
               <br />
-              Upgrade to fully autonomous bid preparation for standard RFPs, self-learning win strategies, 
+              Upgrade to fully autonomous bid preparation for standard RFPs, self-learning win strategies,
               and zero-touch proposal generation with continuous quality improvement.
             </p>
           </div>

@@ -29,8 +29,8 @@ const App: React.FC = () => {
     <Router>
       <AppLayout>
         <Routes>
+          <Route path={ROUTES.HOME} element={<LandingPage />} />
           <Route path="/landing" element={<LandingPage />} />
-          <Route path={ROUTES.HOME} element={<Dashboard />} />
           <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           <Route path={ROUTES.RFP.LIST} element={<RFPList />} />
           <Route path={ROUTES.RFP.DETAIL} element={<RealRFPProcess />} />

@@ -68,7 +68,7 @@ export const useAppStore = create<AppState>()(
           })),
 
         // UI state
-        sidebarOpen: true,
+        sidebarOpen: false,
         setSidebarOpen: (open) => set({ sidebarOpen: open }),
         toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
