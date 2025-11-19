@@ -117,6 +117,7 @@ CREATE TABLE documents (
     is_public BOOLEAN DEFAULT false,
     metadata JSONB DEFAULT '{}',
     search_text TSVECTOR,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

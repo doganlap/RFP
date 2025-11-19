@@ -102,10 +102,18 @@ module.exports = async (req, res) => {
         { expiresIn: process.env.JWT_EXPIRY || '7d' }
       );
 
-      // TODO: Send email with verification link
-      // await sendVerificationEmail(email, verificationToken);
-      // For development, log the token
-      console.log(`Email verification token for ${email}: ${verificationToken}`);
+      // Send verification email
+      const EmailService = require('../services/EmailService');
+      try {
+        await EmailService.sendVerificationEmail(email, verificationToken);
+      } catch (emailError) {
+        console.error('Email send error (non-blocking):', emailError);
+        // Don't fail registration if email fails - token is logged
+      }
+      // For development, also log the token
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Email verification token for ${email}: ${verificationToken}`);
+      }
 
       res.status(201).json({
         success: true,

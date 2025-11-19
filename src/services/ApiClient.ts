@@ -1,13 +1,30 @@
-// Production API Client Service
+// Production API Client Service with Error Handling & Retry Logic
 // src/services/ApiClient.ts
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+interface RetryConfig {
+  maxRetries: number;
+  delayMs: number;
+  backoffMultiplier: number;
+}
+
+interface ApiError extends Error {
+  status?: number;
+  data?: any;
+}
+
 class ApiClient {
   token: string | null;
+  retryConfig: RetryConfig;
 
   constructor() {
     this.token = localStorage.getItem('authToken');
+    this.retryConfig = {
+      maxRetries: 3,
+      delayMs: 1000,
+      backoffMultiplier: 2
+    };
   }
 
   setToken(token: string) {
@@ -20,39 +37,109 @@ class ApiClient {
     localStorage.removeItem('authToken');
   }
 
-  async request(endpoint: string, options: any = {}) {
-    const url = `${API_URL}${endpoint}`;
-    const headers: any = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
-
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
+  /**
+   * Retry logic with exponential backoff
+   */
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries: number = 0
+  ): Promise<T> {
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
+      return await fn();
+    } catch (error: any) {
+      const isRetryable =
+        error.status === 429 || // Rate limited
+        error.status === 503 || // Service unavailable
+        error.status >= 500;    // Server errors
 
-      if (response.status === 401) {
-        this.clearToken();
-        // window.location.href = '/login';
+      if (isRetryable && retries < this.retryConfig.maxRetries) {
+        const delay = this.retryConfig.delayMs * Math.pow(this.retryConfig.backoffMultiplier, retries);
+        console.warn(`Retrying (attempt ${retries + 1}/${this.retryConfig.maxRetries}) after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.retryWithBackoff(fn, retries + 1);
       }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}`);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('API request error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Main request method with error handling
+   */
+  async request(endpoint: string, options: any = {}) {
+    return this.retryWithBackoff(async () => {
+      const url = `${API_URL}${endpoint}`;
+      const headers: any = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), options.timeout || 30000);
+
+        const response = await fetch(url, {
+          ...options,
+          headers,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        const data = await response.json().catch(() => ({}));
+
+        // Handle 401 - clear token and redirect to login
+        if (response.status === 401) {
+          this.clearToken();
+          window.location.href = '/login';
+          throw this.createError('Session expired. Please log in again.', 401, data);
+        }
+
+        // Handle other errors
+        if (!response.ok) {
+          throw this.createError(
+            data.error || `HTTP ${response.status}`,
+            response.status,
+            data
+          );
+        }
+
+        return data;
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          throw this.createError('Request timeout. Please try again.', 408, null);
+        }
+
+        // Re-throw API errors with status
+        if (error.status) {
+          throw error;
+        }
+
+        // Handle network errors
+        if (error instanceof TypeError) {
+          throw this.createError(
+            'Network error. Please check your connection.',
+            0,
+            null
+          );
+        }
+
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * Create structured API error
+   */
+  private createError(message: string, status?: number, data?: any): ApiError {
+    const error: ApiError = new Error(message);
+    error.status = status;
+    error.data = data;
+    return error;
   }
 
   // Auth endpoints
@@ -232,9 +319,19 @@ class ApiClient {
     return this.request(url);
   }
 
+  deleteDocument(documentId: string) {
+    return this.request(`/api/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Health check
   healthCheck() {
-    return this.request('/api/db/connect');
+    return this.request('/api/health');
+  }
+
+  healthCheckDetailed() {
+    return this.request('/api/health/detailed');
   }
 }
 

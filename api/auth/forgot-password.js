@@ -67,10 +67,18 @@ module.exports = async (req, res) => {
         [userId, tokenHash, expiresAt, req.headers['x-forwarded-for'] || req.connection.remoteAddress]
       );
 
-      // TODO: Send email with reset link
-      // await sendPasswordResetEmail(email, resetToken);
-      // For now, log the token (in production, remove this)
-      console.log(`Password reset token for ${email}: ${resetToken}`);
+      // Send password reset email
+      const EmailService = require('../services/EmailService');
+      try {
+        await EmailService.sendPasswordResetEmail(email, resetToken);
+      } catch (emailError) {
+        console.error('Email send error (non-blocking):', emailError);
+        // Don't fail request if email fails - token is logged
+      }
+      // For development, also log the token
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Password reset token for ${email}: ${resetToken}`);
+      }
 
       res.status(200).json({
         success: true,

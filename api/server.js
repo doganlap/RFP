@@ -710,6 +710,59 @@ app.get('/api/rfps/:rfpId/documents/search', authenticate, async (req, res) => {
   }
 });
 
+// Delete document (soft delete)
+app.delete('/api/documents/:id', authenticate, async (req, res) => {
+  try {
+    const documentResult = await pool.query(
+      `SELECT * FROM documents WHERE id = $1 AND tenant_id = $2`,
+      [req.params.id, req.user.tenant_id]
+    );
+
+    if (documentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const document = documentResult.rows[0];
+
+    // Check permission - only uploader or admin can delete
+    if (document.uploaded_by !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Soft delete: update deleted_at timestamp
+    const deleteResult = await pool.query(
+      `UPDATE documents
+       SET deleted_at = NOW(), updated_at = NOW()
+       WHERE id = $1
+       RETURNING id, original_filename, status`,
+      [req.params.id]
+    );
+
+    // Log the deletion
+    await pool.query(
+      `INSERT INTO document_access_logs
+       (document_id, user_id, action, ip_address, user_agent, accessed_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [
+        req.params.id,
+        req.user.id,
+        'delete',
+        req.ip,
+        req.get('User-Agent')
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Document deleted successfully',
+      document: deleteResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Delete document error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ==================== ANALYTICS ROUTES ====================
 
 // Get dashboard analytics
@@ -774,6 +827,66 @@ app.use((error, req, res, next) => {
   }
 
   res.status(500).json({ error: 'Internal server error' });
+});
+
+// Health check endpoints
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: NODE_ENV
+  });
+});
+
+app.get('/health/detailed', async (req, res) => {
+  try {
+    const health = {
+      status: 'unknown',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: NODE_ENV,
+      services: {}
+    };
+
+    // Check database
+    try {
+      await pool.query('SELECT NOW()');
+      health.services.database = { status: 'healthy' };
+    } catch (error) {
+      health.services.database = { status: 'unhealthy', error: error.message };
+    }
+
+    // Check Redis
+    try {
+      await redis.ping();
+      health.services.redis = { status: 'healthy' };
+    } catch (error) {
+      health.services.redis = { status: 'unhealthy', error: error.message };
+    }
+
+    // Check S3
+    try {
+      await s3.headBucket({ Bucket: process.env.AWS_S3_BUCKET || 'rfp-platform-documents' }).promise();
+      health.services.s3 = { status: 'healthy' };
+    } catch (error) {
+      health.services.s3 = { status: 'unhealthy', error: error.message };
+    }
+
+    // Determine overall status
+    const allHealthy = Object.values(health.services).every(service => service.status === 'healthy');
+    health.status = allHealthy ? 'healthy' : 'degraded';
+
+    const statusCode = allHealthy ? 200 : 503;
+    res.status(statusCode).json(health);
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // 404 handler
