@@ -3,18 +3,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/ar/terms", "destination": "/index.html" },
-    { "source": "/ar/privacy", "destination": "/index.html" },
-    { "source": "/ar/support", "destination": "/index.html" },
-    { "source": "/ar/platform/motivation", "destination": "/index.html" },
-    { "source": "/ar/platform/hr", "destination": "/index.html" },
-    { "source": "/ar/platform/finance", "destination": "/index.html" },
-    { "source": "/ar/platform/sales", "destination": "/index.html" },
-    { "source": "/ar/platform/dashboard", "destination": "/index.html" },
-    { "source": "/ar/platform/crm", "destination": "/index.html" },
-    { "source": "/en/terms", "destination": "/index.html" },
-    { "source": "/en/privacy", "destination": "/index.html" },
-    { "source": "/en/support", "destination": "/index.html" }
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
