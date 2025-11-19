@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
 import mammoth from 'mammoth';
+import { Pool } from 'pg';
 
 export class DocumentService {
   constructor() {
@@ -13,9 +14,15 @@ export class DocumentService {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       region: process.env.AWS_REGION || 'us-east-1'
     });
-    
+
     this.bucketName = process.env.AWS_S3_BUCKET || 'rfp-platform-documents';
     this.cdnUrl = process.env.AWS_CLOUDFRONT_URL;
+
+    // PostgreSQL connection pool for document metadata
+    this.pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
   }
 
   // Upload document to S3 with encryption
@@ -25,10 +32,10 @@ export class DocumentService {
       const timestamp = Date.now();
       const fileExtension = this.getFileExtension(file.originalname);
       const s3Key = `rfps/${rfpId}/documents/${timestamp}-${fileId}.${fileExtension}`;
-      
+
       // Calculate file checksum
       const checksum = crypto.createHash('sha256').update(file.buffer).digest('hex');
-      
+
       // Upload to S3 with server-side encryption
       const uploadParams = {
         Bucket: this.bucketName,
@@ -47,7 +54,7 @@ export class DocumentService {
       };
 
       const uploadResult = await this.s3.upload(uploadParams).promise();
-      
+
       // Create document record
       const documentRecord = {
         id: fileId,
@@ -80,7 +87,7 @@ export class DocumentService {
     try {
       // Get document record from database (would be implemented)
       const document = await this.getDocumentById(documentId);
-      
+
       if (!document) {
         throw new Error('Document not found');
       }
@@ -119,12 +126,12 @@ export class DocumentService {
 
       // Collect PDF data
       doc.on('data', chunk => chunks.push(chunk));
-      
+
       return new Promise((resolve, reject) => {
         doc.on('end', async () => {
           try {
             const pdfBuffer = Buffer.concat(chunks);
-            
+
             // Upload generated PDF
             const proposalFile = {
               buffer: pdfBuffer,
@@ -185,7 +192,7 @@ export class DocumentService {
     // Commercial Terms
     doc.addPage();
     doc.fontSize(16).text('COMMERCIAL TERMS', 50, 50);
-    
+
     if (proposalData.pricing) {
       doc.fontSize(14).text('Pricing Summary', 50, 80);
       doc.fontSize(12).text(`Total Contract Value: $${proposalData.pricing.totalValue?.toLocaleString()}`, 50, 110);
@@ -196,7 +203,7 @@ export class DocumentService {
     // Compliance & Certifications
     doc.addPage();
     doc.fontSize(16).text('COMPLIANCE & CERTIFICATIONS', 50, 50);
-    
+
     if (proposalData.compliance) {
       proposalData.compliance.forEach((item, index) => {
         doc.fontSize(12).text(`• ${item}`, 50, 80 + (index * 20));
@@ -206,7 +213,7 @@ export class DocumentService {
     // Team & Experience
     doc.addPage();
     doc.fontSize(16).text('TEAM & EXPERIENCE', 50, 50);
-    
+
     if (proposalData.team) {
       proposalData.team.forEach((member, index) => {
         doc.fontSize(14).text(member.name, 50, 80 + (index * 60));
@@ -245,7 +252,7 @@ export class DocumentService {
   async createDocumentVersion(documentId, file, userId, notes = '') {
     try {
       const originalDocument = await this.getDocumentById(documentId);
-      
+
       if (!originalDocument) {
         throw new Error('Original document not found');
       }
@@ -294,12 +301,12 @@ export class DocumentService {
   // Bulk document operations
   async bulkUpload(rfpId, files, metadata = {}) {
     try {
-      const uploadPromises = files.map(file => 
+      const uploadPromises = files.map(file =>
         this.uploadDocument(rfpId, file, metadata)
       );
 
       const results = await Promise.allSettled(uploadPromises);
-      
+
       const successful = results.filter(r => r.status === 'fulfilled').map(r => r.value);
       const failed = results.filter(r => r.status === 'rejected').map(r => r.reason);
 
@@ -330,7 +337,7 @@ export class DocumentService {
 
       // Placeholder implementation
       const results = await this.performDocumentSearch(searchParams);
-      
+
       return results;
     } catch (error) {
       console.error('Document search error:', error);
@@ -355,34 +362,188 @@ export class DocumentService {
       'image/png',
       'image/gif'
     ];
-    
+
     return allowedTypes.includes(mimetype);
   }
 
   // Placeholder methods (would be implemented with database)
   async getDocumentById(documentId) {
     // Database query implementation
-    return null;
+    try {
+      const result = await this.pool.query(
+        `SELECT id, tenant_id, rfp_id, filename, original_filename, file_size,
+                mime_type, storage_path, document_type, version, parent_document_id,
+                checksum, uploaded_by, is_public, metadata, created_at, updated_at
+         FROM documents
+         WHERE id = $1`,
+        [documentId]
+      );
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error fetching document:', error);
+      return null;
+    }
   }
 
   async checkDownloadPermission(document, userId) {
     // Permission check implementation
-    return true;
+    try {
+      // Get user details including tenant and role
+      const userResult = await this.pool.query(
+        `SELECT id, tenant_id, role FROM users WHERE id = $1`,
+        [userId]
+      );
+
+      if (userResult.rows.length === 0) {
+        return false;
+      }
+
+      const user = userResult.rows[0];
+
+      // Check 1: User must be in same tenant
+      if (user.tenant_id !== document.tenant_id) {
+        return false;
+      }
+
+      // Check 2: Document is public (anyone in tenant can download)
+      if (document.is_public) {
+        return true;
+      }
+
+      // Check 3: User is the uploader
+      if (document.uploaded_by === userId) {
+        return true;
+      }
+
+      // Check 4: User is admin or manager on the RFP
+      const rfpAccessResult = await this.pool.query(
+        `SELECT id FROM rfps
+         WHERE id = $1 AND tenant_id = $2 AND (
+           sales_rep_id = $3 OR
+           sales_manager_id = $3 OR
+           presales_lead_id = $3 OR
+           solution_architect_id = $3
+         )`,
+        [document.rfp_id, user.tenant_id, userId]
+      );
+
+      if (rfpAccessResult.rows.length > 0) {
+        return true;
+      }
+
+      // Check 5: Admin users can access anything in their tenant
+      if (user.role === 'admin') {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking download permission:', error);
+      return false;
+    }
   }
 
   async logDocumentAccess(documentId, userId, action) {
     // Audit log implementation
-    console.log(`Document ${action}: ${documentId} by user ${userId}`);
+    try {
+      await this.pool.query(
+        `INSERT INTO document_access_logs
+         (document_id, user_id, action, accessed_at)
+         VALUES ($1, $2, $3, NOW())`,
+        [documentId, userId, action]
+      );
+    } catch (error) {
+      console.error('Error logging document access:', error);
+      // Don't throw - logging failures shouldn't block operations
+    }
   }
 
   async storeSignature(signature) {
     // Database storage implementation
-    console.log('Signature stored:', signature);
+    try {
+      await this.pool.query(
+        `INSERT INTO document_signatures
+         (document_id, signer_id, signature_data, signature_hash, signed_at)
+         VALUES ($1, $2, $3, $4, NOW())`,
+        [
+          signature.document_id,
+          signature.signer_id,
+          JSON.stringify(signature.signature_data),
+          signature.signature_hash
+        ]
+      );
+    } catch (error) {
+      console.error('Error storing signature:', error);
+      throw new Error(`Failed to store signature: ${error.message}`);
+    }
   }
 
   async performDocumentSearch(searchParams) {
-    // Search implementation
-    return [];
+    // Search implementation using PostgreSQL full-text search
+    try {
+      const { rfp_id, query, document_type, file_type, date_range } = searchParams;
+
+      let sql = `
+        SELECT id, rfp_id, original_filename, document_type, file_size,
+               created_at, uploaded_by, mime_type
+        FROM documents
+        WHERE rfp_id = $1
+      `;
+
+      const params = [rfp_id];
+      let paramIndex = 2;
+
+      // Full-text search on filename and content
+      if (query) {
+        sql += ` AND (
+          original_filename ILIKE '%' || $${paramIndex} || '%' OR
+          search_text @@ plainto_tsquery('english', $${paramIndex})
+        )`;
+        params.push(query);
+        paramIndex++;
+      }
+
+      // Filter by document type
+      if (document_type) {
+        sql += ` AND document_type = $${paramIndex}`;
+        params.push(document_type);
+        paramIndex++;
+      }
+
+      // Filter by MIME type
+      if (file_type) {
+        sql += ` AND mime_type = $${paramIndex}`;
+        params.push(file_type);
+        paramIndex++;
+      }
+
+      // Filter by date range
+      if (date_range) {
+        if (date_range.start) {
+          sql += ` AND created_at >= $${paramIndex}`;
+          params.push(date_range.start);
+          paramIndex++;
+        }
+        if (date_range.end) {
+          sql += ` AND created_at <= $${paramIndex}`;
+          params.push(date_range.end);
+          paramIndex++;
+        }
+      }
+
+      sql += ` ORDER BY created_at DESC LIMIT 100`;
+
+      const result = await this.pool.query(sql, params);
+      return result.rows;
+    } catch (error) {
+      console.error('Error searching documents:', error);
+      return [];
+    }
   }
 }
 

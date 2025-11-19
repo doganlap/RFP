@@ -96,6 +96,42 @@ CREATE TABLE account_deactivations (
     deleted_data_at TIMESTAMP WITH TIME ZONE
 );
 
+-- Documents table for RFP and proposal file management
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    rfp_id UUID NOT NULL REFERENCES rfps(id) ON DELETE CASCADE,
+    filename VARCHAR(500) NOT NULL,
+    original_filename VARCHAR(500) NOT NULL,
+    file_size INTEGER NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    storage_path TEXT NOT NULL,
+    document_type VARCHAR(50) NOT NULL DEFAULT 'general' CHECK (document_type IN (
+        'general', 'rfp_document', 'proposal', 'presentation', 'technical_spec',
+        'pricing_sheet', 'contract', 'compliance', 'support_doc'
+    )),
+    version INTEGER DEFAULT 1,
+    parent_document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+    checksum VARCHAR(255),
+    uploaded_by UUID NOT NULL REFERENCES users(id),
+    is_public BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '{}',
+    search_text TSVECTOR,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Document access audit log
+CREATE TABLE document_access_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    action VARCHAR(50) NOT NULL CHECK (action IN ('view', 'download', 'upload', 'delete', 'share')),
+    ip_address INET,
+    user_agent TEXT,
+    accessed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Clients table
 CREATE TABLE clients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -240,6 +276,12 @@ CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 CREATE INDEX idx_comments_resource ON comments(resource_type, resource_id);
 CREATE INDEX idx_mentions_user_id ON mentions(user_id);
 CREATE INDEX idx_discussions_rfp_id ON discussions(rfp_id);
+CREATE INDEX idx_documents_rfp_id ON documents(rfp_id);
+CREATE INDEX idx_documents_tenant_id ON documents(tenant_id);
+CREATE INDEX idx_documents_uploaded_by ON documents(uploaded_by);
+CREATE INDEX idx_documents_search ON documents USING GIN(search_text);
+CREATE INDEX idx_document_access_logs_document_id ON document_access_logs(document_id);
+CREATE INDEX idx_document_access_logs_user_id ON document_access_logs(user_id);
 
 -- Triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()

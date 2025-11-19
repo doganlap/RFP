@@ -4,6 +4,8 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 class ApiClient {
+  token: string | null;
+
   constructor() {
     this.token = localStorage.getItem('authToken');
   }
@@ -179,6 +181,55 @@ class ApiClient {
   // Analytics endpoints
   getAnalytics() {
     return this.request('/api/analysis/analytics');
+  }
+
+  // Document endpoints
+  async uploadDocument(rfpId: string, file: File, documentType: string = 'general') {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('document_type', documentType);
+
+    const url = `${API_URL}/api/rfps/${rfpId}/documents`;
+    const headers: any = {};
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Document upload error:', error);
+      throw error;
+    }
+  }
+
+  getDocument(documentId: string) {
+    return this.request(`/api/documents/${documentId}`);
+  }
+
+  downloadDocument(documentId: string) {
+    return this.request(`/api/documents/${documentId}/download`);
+  }
+
+  searchDocuments(rfpId: string, query: string, type?: string, dateFrom?: string, dateTo?: string) {
+    let url = `/api/rfps/${rfpId}/documents/search?q=${encodeURIComponent(query)}`;
+    if (type) url += `&type=${type}`;
+    if (dateFrom) url += `&dateFrom=${dateFrom}`;
+    if (dateTo) url += `&dateTo=${dateTo}`;
+    return this.request(url);
   }
 
   // Health check

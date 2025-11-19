@@ -486,21 +486,226 @@ app.post('/api/rfps/:rfpId/documents', authenticate, upload.single('file'), asyn
       ServerSideEncryption: 'AES256'
     }).promise();
 
-    // Save document record
-    const document = await rfpService.createDocument({
-      rfp_id: req.params.rfpId,
-      filename: s3Key,
-      original_filename: req.file.originalname,
-      file_size: req.file.size,
-      mime_type: req.file.mimetype,
-      storage_path: uploadResult.Location,
-      uploaded_by: req.user.id,
-      document_type: req.body.document_type || 'general'
-    });
+    // Calculate checksum
+    const crypto = require('crypto');
+    const checksum = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+
+    // Save document record to PostgreSQL
+    const documentResult = await pool.query(
+      `INSERT INTO documents
+       (tenant_id, rfp_id, filename, original_filename, file_size, mime_type,
+        storage_path, document_type, checksum, uploaded_by, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+       RETURNING id, tenant_id, rfp_id, filename, original_filename, file_size,
+                 mime_type, storage_path, document_type, version, checksum,
+                 uploaded_by, created_at, updated_at`,
+      [
+        req.user.tenant_id,
+        req.params.rfpId,
+        s3Key,
+        req.file.originalname,
+        req.file.size,
+        req.file.mimetype,
+        uploadResult.Location,
+        req.body.document_type || 'general',
+        checksum,
+        req.user.id
+      ]
+    );
+
+    const document = documentResult.rows[0];
+
+    // Log the upload
+    await pool.query(
+      `INSERT INTO document_access_logs
+       (document_id, user_id, action, ip_address, user_agent, accessed_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [
+        document.id,
+        req.user.id,
+        'upload',
+        req.ip,
+        req.get('User-Agent')
+      ]
+    );
 
     res.status(201).json(document);
   } catch (error) {
     console.error('Upload document error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get document
+app.get('/api/documents/:id', authenticate, async (req, res) => {
+  try {
+    const documentResult = await pool.query(
+      `SELECT * FROM documents WHERE id = $1 AND tenant_id = $2`,
+      [req.params.id, req.user.tenant_id]
+    );
+
+    if (documentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const document = documentResult.rows[0];
+
+    // Check permission
+    const canAccess =
+      document.is_public ||
+      document.uploaded_by === req.user.id ||
+      req.user.role === 'admin';
+
+    if (!canAccess) {
+      // Check if user is assigned to the RFP
+      const rfpAccessResult = await pool.query(
+        `SELECT id FROM rfps
+         WHERE id = $1 AND tenant_id = $2 AND (
+           sales_rep_id = $3 OR sales_manager_id = $3 OR
+           presales_lead_id = $3 OR solution_architect_id = $3
+         )`,
+        [document.rfp_id, req.user.tenant_id, req.user.id]
+      );
+
+      if (rfpAccessResult.rows.length === 0) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    }
+
+    // Log the access
+    await pool.query(
+      `INSERT INTO document_access_logs
+       (document_id, user_id, action, ip_address, user_agent, accessed_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [
+        document.id,
+        req.user.id,
+        'view',
+        req.ip,
+        req.get('User-Agent')
+      ]
+    );
+
+    res.json(document);
+  } catch (error) {
+    console.error('Get document error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Download document
+app.get('/api/documents/:id/download', authenticate, async (req, res) => {
+  try {
+    const documentResult = await pool.query(
+      `SELECT * FROM documents WHERE id = $1 AND tenant_id = $2`,
+      [req.params.id, req.user.tenant_id]
+    );
+
+    if (documentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const document = documentResult.rows[0];
+
+    // Check permission
+    const canAccess =
+      document.is_public ||
+      document.uploaded_by === req.user.id ||
+      req.user.role === 'admin';
+
+    if (!canAccess) {
+      const rfpAccessResult = await pool.query(
+        `SELECT id FROM rfps
+         WHERE id = $1 AND tenant_id = $2 AND (
+           sales_rep_id = $3 OR sales_manager_id = $3 OR
+           presales_lead_id = $3 OR solution_architect_id = $3
+         )`,
+        [document.rfp_id, req.user.tenant_id, req.user.id]
+      );
+
+      if (rfpAccessResult.rows.length === 0) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    }
+
+    // Log the download
+    await pool.query(
+      `INSERT INTO document_access_logs
+       (document_id, user_id, action, ip_address, user_agent, accessed_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [
+        document.id,
+        req.user.id,
+        'download',
+        req.ip,
+        req.get('User-Agent')
+      ]
+    );
+
+    // Generate signed URL
+    const signedUrl = await s3.getSignedUrlPromise('getObject', {
+      Bucket: process.env.AWS_S3_BUCKET || 'rfp-platform-documents',
+      Key: document.filename,
+      Expires: 3600,
+      ResponseContentDisposition: `attachment; filename="${document.original_filename}"`
+    });
+
+    res.json({
+      downloadUrl: signedUrl,
+      filename: document.original_filename,
+      fileSize: document.file_size,
+      mimeType: document.mime_type
+    });
+  } catch (error) {
+    console.error('Download document error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Search documents
+app.get('/api/rfps/:rfpId/documents/search', authenticate, async (req, res) => {
+  try {
+    const { q, type, dateFrom, dateTo } = req.query;
+
+    let sql = `SELECT id, rfp_id, original_filename, document_type, file_size,
+                      mime_type, uploaded_by, created_at
+               FROM documents
+               WHERE rfp_id = $1 AND tenant_id = $2`;
+    const params = [req.params.rfpId, req.user.tenant_id];
+    let paramIndex = 3;
+
+    // Full-text search
+    if (q) {
+      sql += ` AND original_filename ILIKE '%' || $${paramIndex} || '%'`;
+      params.push(q);
+      paramIndex++;
+    }
+
+    // Filter by type
+    if (type) {
+      sql += ` AND document_type = $${paramIndex}`;
+      params.push(type);
+      paramIndex++;
+    }
+
+    // Date range
+    if (dateFrom) {
+      sql += ` AND created_at >= $${paramIndex}`;
+      params.push(dateFrom);
+      paramIndex++;
+    }
+    if (dateTo) {
+      sql += ` AND created_at <= $${paramIndex}`;
+      params.push(dateTo);
+      paramIndex++;
+    }
+
+    sql += ` ORDER BY created_at DESC LIMIT 100`;
+
+    const result = await pool.query(sql, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Search documents error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
