@@ -68,8 +68,38 @@ class ApiClient {
     });
   }
 
+  verifyEmail(token: string) {
+    return this.request('/api/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  forgotPassword(email: string) {
+    return this.request('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.request('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    });
+  }
+
   logout() {
-    this.clearToken();
+    return this.request('/api/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  deactivateAccount(password: string, reason?: string, deleteData?: boolean) {
+    return this.request('/api/auth/deactivate-account', {
+      method: 'POST',
+      body: JSON.stringify({ password, reason, deleteData }),
+    });
   }
 
   // RFP endpoints

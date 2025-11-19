@@ -4,11 +4,22 @@
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
+
+// Hash token for secure storage
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// Generate verification token
+function generateVerificationToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -42,7 +53,7 @@ module.exports = async (req, res) => {
       // Check if user already exists
       const existingUser = await pool.query(
         'SELECT id FROM users WHERE email = $1',
-        [email]
+        [email.toLowerCase()]
       );
 
       if (existingUser.rows.length > 0) {
@@ -55,34 +66,46 @@ module.exports = async (req, res) => {
       // Default role for new users
       const userRole = role || 'sales_rep';
 
-      // Create new user
+      // Create new user with is_active = false until email is verified
       const result = await pool.query(
         `INSERT INTO users (email, password_hash, name, role, is_active, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, true, NOW(), NOW())
+         VALUES ($1, $2, $3, $4, false, NOW(), NOW())
          RETURNING id, email, name, role`,
-        [email, passwordHash, `${firstName} ${lastName}`, userRole]
+        [email.toLowerCase(), passwordHash, `${firstName} ${lastName}`, userRole]
       );
 
       const user = result.rows[0];
 
-      // Generate JWT token
+      // Generate email verification token
+      const verificationToken = generateVerificationToken();
+      const tokenHash = hashToken(verificationToken);
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Store verification token
+      await pool.query(
+        `INSERT INTO email_verification_tokens (user_id, email, token_hash, expires_at)
+         VALUES ($1, $2, $3, $4)`,
+        [user.id, email.toLowerCase(), tokenHash, expiresAt]
+      );
+
+      // Check JWT_SECRET
       if (!process.env.JWT_SECRET) {
         return res.status(500).json({
           error: 'Server configuration error: JWT_SECRET not set'
         });
       }
 
+      // Generate JWT token (even though user is not yet active)
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRY || '7d' }
       );
 
-      // Update last login
-      await pool.query(
-        'UPDATE users SET last_login = NOW() WHERE id = $1',
-        [user.id]
-      );
+      // TODO: Send email with verification link
+      // await sendVerificationEmail(email, verificationToken);
+      // For development, log the token
+      console.log(`Email verification token for ${email}: ${verificationToken}`);
 
       res.status(201).json({
         success: true,
@@ -93,6 +116,9 @@ module.exports = async (req, res) => {
           name: user.name,
           role: user.role,
         },
+        message: 'Registration successful. Please check your email to verify your account.',
+        // In development only:
+        ...(process.env.NODE_ENV === 'development' && { verificationToken }),
       });
     } catch (error) {
       console.error('Registration error:', error);

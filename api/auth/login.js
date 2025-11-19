@@ -4,6 +4,7 @@
 const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const RateLimitService = require('../services/RateLimitService');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -33,26 +34,79 @@ module.exports = async (req, res) => {
       }
 
       const { email, password } = req.body;
+      const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      const userAgent = req.headers['user-agent'];
 
       if (!email || !password) {
         return res.status(400).json({ error: 'Email and password required' });
       }
 
+      // SECURITY: Check rate limiting
+      const isRateLimited = await RateLimitService.isRateLimited(email, ipAddress);
+      if (isRateLimited) {
+        await RateLimitService.recordAttempt(
+          email,
+          ipAddress,
+          false,
+          'rate_limited',
+          userAgent
+        );
+        const remainingAttempts = await RateLimitService.getRemainingAttempts(email, ipAddress);
+        return res.status(429).json({
+          error: 'Too many login attempts. Please try again later.',
+          remainingAttempts,
+        });
+      }
+
       const result = await pool.query(
         'SELECT * FROM users WHERE email = $1 AND is_active = true',
-        [email]
+        [email.toLowerCase()]
       );
 
       if (result.rows.length === 0) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        await RateLimitService.recordAttempt(
+          email,
+          ipAddress,
+          false,
+          'invalid_credentials',
+          userAgent
+        );
+        const remainingAttempts = await RateLimitService.getRemainingAttempts(email, ipAddress);
+        return res.status(401).json({
+          error: 'Invalid credentials',
+          remainingAttempts,
+        });
       }
 
       const user = result.rows[0];
       const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
       if (!isValidPassword) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        await RateLimitService.recordAttempt(
+          email,
+          ipAddress,
+          false,
+          'invalid_password',
+          userAgent
+        );
+        const remainingAttempts = await RateLimitService.getRemainingAttempts(email, ipAddress);
+        return res.status(401).json({
+          error: 'Invalid credentials',
+          remainingAttempts,
+        });
       }
+
+      // Record successful login
+      await RateLimitService.recordAttempt(
+        email,
+        ipAddress,
+        true,
+        null,
+        userAgent
+      );
+
+      // Clear failed attempts on successful login
+      await RateLimitService.clearAttempts(email, ipAddress);
 
       // Generate JWT
       const token = jwt.sign(

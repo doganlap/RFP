@@ -52,6 +52,50 @@ CREATE TABLE user_sessions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Password reset tokens for secure password recovery
+CREATE TABLE password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    used_at TIMESTAMP WITH TIME ZONE,
+    ip_address INET,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Email verification tokens for new registrations
+CREATE TABLE email_verification_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Login attempt tracking for rate limiting and security
+CREATE TABLE login_attempts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL,
+    ip_address INET NOT NULL,
+    success BOOLEAN DEFAULT false,
+    failure_reason VARCHAR(100),
+    user_agent TEXT,
+    attempted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Account deactivation audit trail
+CREATE TABLE account_deactivations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    deactivated_by_user_id UUID REFERENCES users(id),
+    reason VARCHAR(500),
+    deactivated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reactivated_at TIMESTAMP WITH TIME ZONE,
+    deleted_data_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Clients table
 CREATE TABLE clients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
