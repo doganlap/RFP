@@ -121,7 +121,7 @@ export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({
       teamFeedback,
       actionItems: actionItems.filter(a => a.trim()),
       completedAt: new Date().toISOString(),
-      completedBy: 'current-user' // TODO: Get from auth context
+      completedBy: user?.id || 'current-user',
     };
 
     onAnalysisSubmit(analysis);

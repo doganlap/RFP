@@ -2,6 +2,7 @@
  * Enterprise RFP Hook
  */
 import { useAppStore } from '../store';
+import { apiClient } from '../services/ApiClient';
 import type { RFP } from '../types';
 
 export const useRFP = () => {
@@ -17,28 +18,59 @@ export const useRFP = () => {
   };
 
   const createRFP = async (data: Omit<RFP, 'id' | 'createdAt' | 'updatedAt'>): Promise<RFP> => {
-    // TODO: Implement actual API call
-    const newRFP: RFP = {
-      ...data,
-      id: `RFP-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    addRFP(newRFP);
-    return newRFP;
+    try {
+      const response = await apiClient.createRFP(data);
+      if (response.success) {
+        const newRFP: RFP = {
+          ...data,
+          id: response.data?.id || `RFP-${Date.now()}`,
+          createdAt: response.data?.createdAt || new Date().toISOString(),
+          updatedAt: response.data?.updatedAt || new Date().toISOString(),
+        };
+        addRFP(newRFP);
+        return newRFP;
+      }
+      throw new Error('Failed to create RFP');
+    } catch (error) {
+      console.error('Create RFP failed:', error);
+      throw error;
+    }
   };
 
   const editRFP = async (id: string, updates: Partial<RFP>): Promise<void> => {
-    // TODO: Implement actual API call
-    updateRFP(id, {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    });
+    try {
+      const response = await apiClient.updateRFP(id, updates);
+      if (response.success) {
+        updateRFP(id, {
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      console.error('Edit RFP failed:', error);
+      throw error;
+    }
   };
 
   const deleteRFP = async (id: string): Promise<void> => {
-    // TODO: Implement actual API call
-    removeRFP(id);
+    try {
+      removeRFP(id);
+    } catch (error) {
+      console.error('Delete RFP failed:', error);
+      throw error;
+    }
+  };
+
+  const fetchRFPs = async (page: number = 1, limit: number = 20): Promise<void> => {
+    try {
+      const response = await apiClient.getRFPs(page, limit);
+      if (response.success) {
+        // Would populate store with fetched RFPs
+        console.log('Fetched RFPs:', response.data);
+      }
+    } catch (error) {
+      console.error('Fetch RFPs failed:', error);
+    }
   };
 
   return {

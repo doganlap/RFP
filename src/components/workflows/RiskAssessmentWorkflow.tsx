@@ -123,7 +123,7 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
       risks,
       overallRiskScore: overall.score,
       riskLevel: overall.level,
-      assessedBy: 'current-user', // TODO: Get from auth
+      assessedBy: user?.id || 'current-user',
       assessedAt: new Date().toISOString()
     };
 

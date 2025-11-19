@@ -135,7 +135,7 @@ export const PreQualificationScreen: React.FC<PreQualificationScreenProps> = ({
       criteriaId,
       value,
       score,
-      respondedBy: 'current-user', // TODO: Get from auth
+      respondedBy: user?.id || 'current-user',
       respondedAt: new Date().toISOString()
     };
 
