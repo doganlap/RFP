@@ -13,6 +13,7 @@ import FinanceReview from './pages/FinanceReview';
 import TechReview from './pages/TechReview';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import Dashboard from './pages/Dashboard';
+import LandingPage from './pages/LandingPage';
 import { useRFP } from './hooks/useRFP';
 
 const App: React.FC = () => {
@@ -28,6 +29,7 @@ const App: React.FC = () => {
     <Router>
       <AppLayout>
         <Routes>
+          <Route path="/landing" element={<LandingPage />} />
           <Route path={ROUTES.HOME} element={<Dashboard />} />
           <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           <Route path={ROUTES.RFP.LIST} element={<RFPList />} />

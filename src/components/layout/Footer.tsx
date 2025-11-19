@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
               © {currentYear} All Rights Reserved
             </span>
           </div>
-          
+
           <div className="flex items-center gap-1 text-sm">
             <span className="text-gray-400">Powered by</span>
             <a
