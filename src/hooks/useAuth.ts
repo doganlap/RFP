@@ -15,15 +15,17 @@ export const useAuth = () => {
 
       if (response.success && response.token) {
         apiClient.setToken(response.token);
-        const mockUser: User = {
+        // Parse name into firstName and lastName
+        const nameParts = (response.user?.name || '').split(' ');
+        const user: User = {
           id: response.user?.id || '1',
           email: response.user?.email || email,
-          role: (response.user?.role || 'SALES') as any,
-          firstName: response.user?.name?.split(' ')[0] || '',
-          lastName: response.user?.name?.split(' ')[1] || '',
-          permissions: getPermissionsForRole(response.user?.role || 'SALES'),
+          role: (response.user?.role || 'sales_rep') as any,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          permissions: getPermissionsForRole(response.user?.role || 'sales_rep'),
         };
-        setUser(mockUser);
+        setUser(user);
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -44,16 +46,20 @@ export const useAuth = () => {
     lastName: string
   ): Promise<void> => {
     try {
-      // Register endpoint would be called here
-      const mockUser: User = {
-        id: `user-${Date.now()}`,
-        email,
-        role: 'SALES' as any,
-        firstName,
-        lastName,
-        permissions: getPermissionsForRole('SALES'),
-      };
-      setUser(mockUser);
+      const response = await apiClient.register(email, password, firstName, lastName, 'sales_rep');
+
+      if (response.success && response.token) {
+        apiClient.setToken(response.token);
+        const user: User = {
+          id: response.user?.id || '1',
+          email: response.user?.email || email,
+          role: (response.user?.role || 'sales_rep') as any,
+          firstName: firstName,
+          lastName: lastName,
+          permissions: getPermissionsForRole(response.user?.role || 'sales_rep'),
+        };
+        setUser(user);
+      }
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;

@@ -61,6 +61,13 @@ class ApiClient {
     });
   }
 
+  register(email: string, password: string, firstName: string, lastName: string, role?: string) {
+    return this.request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, firstName, lastName, role }),
+    });
+  }
+
   logout() {
     this.clearToken();
   }

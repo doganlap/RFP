@@ -24,6 +24,14 @@ module.exports = async (req, res) => {
 
   if (req.method === 'POST') {
     try {
+      // SECURITY: Check JWT_SECRET is configured
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({
+          success: false,
+          error: 'Server configuration error: JWT_SECRET not set'
+        });
+      }
+
       const { email, password } = req.body;
 
       if (!email || !password) {

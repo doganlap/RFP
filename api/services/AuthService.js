@@ -4,7 +4,11 @@ const bcrypt = require('bcryptjs');
 
 class AuthService {
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'dev-secret-key';
+    // SECURITY: Fail fast if JWT_SECRET is not set in production
+    if (!process.env.JWT_SECRET) {
+      throw new Error('FATAL: JWT_SECRET environment variable is not set. Authentication cannot proceed.');
+    }
+    this.jwtSecret = process.env.JWT_SECRET;
     this.jwtExpiry = process.env.JWT_EXPIRY || '7d';
   }
 
