@@ -1,9 +1,7 @@
 // src/components/rfp/RFPDetail.tsx
-import React from 'react';
 import Comments from '../collaboration/Comments';
 import Mentions from '../collaboration/Mentions';
 import Discussions from '../collaboration/Discussions';
-
 const RFPDetail = () => {
   // Mock RFP data
   const rfp = {
@@ -17,13 +15,13 @@ const RFPDetail = () => {
       <p>Details about the RFP will be displayed here.</p>
 
       <div className="mt-8">
-        <Comments />
+        <Comments resourceId={rfp.id} resourceType="rfp" />
       </div>
       <div className="mt-8">
-        <Mentions />
+        <Mentions onMentionRead={() => {}} />
       </div>
       <div className="mt-8">
-        <Discussions />
+        <Discussions rfpId={rfp.id} />
       </div>
     </div>
   );

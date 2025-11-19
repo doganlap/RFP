@@ -6,16 +6,24 @@ import PDFDocument from 'pdfkit';
 import mammoth from 'mammoth';
 import { Pool } from 'pg';
 
+const requireEnv = (name) => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+};
+
 export class DocumentService {
   constructor() {
     // AWS S3 Configuration
     this.s3 = new AWS.S3({
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
+      region: requireEnv('AWS_REGION')
     });
 
-    this.bucketName = process.env.AWS_S3_BUCKET || 'rfp-platform-documents';
+    this.bucketName = requireEnv('AWS_S3_BUCKET');
     this.cdnUrl = process.env.AWS_CLOUDFRONT_URL;
 
     // PostgreSQL connection pool for document metadata

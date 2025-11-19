@@ -2,11 +2,11 @@
  * Win/Loss Analysis Module
  * Post-RFP retrospective with lessons learned
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import type { WinLossAnalysis, WinLossReason } from '../../types/workflow';
+import type { WinLossAnalysis as WinLossAnalysisRecord, WinLossReason } from '../../types/workflow';
 import {
   TrophyIcon,
   XCircle,
@@ -19,13 +19,12 @@ import {
   Target,
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
   Lightbulb,
   BookOpen,
   ThumbsUp,
   ThumbsDown
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '../../utils/format';
+import { formatCurrency } from '../../utils/format';
 
 interface WinLossAnalysisProps {
   rfpId: string;
@@ -34,8 +33,8 @@ interface WinLossAnalysisProps {
   estimatedValue: number;
   actualValue?: number;
   competitorCount?: number;
-  onAnalysisSubmit: (analysis: WinLossAnalysis) => void;
-  existingAnalysis?: WinLossAnalysis;
+  onAnalysisSubmit: (analysis: WinLossAnalysisRecord) => void;
+  existingAnalysis?: WinLossAnalysisRecord;
 }
 
 const OUTCOME_OPTIONS: { value: 'won' | 'lost' | 'no-decision'; label: string; icon: any; color: string }[] = [
@@ -64,16 +63,17 @@ const RATING_CATEGORIES = [
   { key: 'timelinessOfDelivery', label: 'Timeliness of Delivery', icon: Clock }
 ] as const;
 
-export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({
-  rfpId,
-  rfpTitle,
-  client,
-  estimatedValue,
-  actualValue,
-  competitorCount = 0,
-  onAnalysisSubmit,
-  existingAnalysis
-}) => {
+export const WinLossAnalysisWorkflow: React.FC<WinLossAnalysisProps> = (props: WinLossAnalysisProps) => {
+  const {
+    rfpId,
+    rfpTitle,
+    client,
+    estimatedValue,
+    actualValue,
+    competitorCount = 0,
+    onAnalysisSubmit,
+    existingAnalysis
+  } = props;
   const [outcome, setOutcome] = useState<'won' | 'lost' | 'no-decision' | undefined>(
     existingAnalysis?.outcome
   );
@@ -97,7 +97,11 @@ export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({
   const [strengths, setStrengths] = useState<string[]>(existingAnalysis?.strengths || ['']);
   const [weaknesses, setWeaknesses] = useState<string[]>(existingAnalysis?.weaknesses || ['']);
   const [lessonsLearned, setLessonsLearned] = useState<string[]>(existingAnalysis?.lessonsLearned || ['']);
-  const [teamFeedback, setTeamFeedback] = useState<string>(existingAnalysis?.teamFeedback || '');
+  const [teamFeedback, setTeamFeedback] = useState<string>(
+    typeof existingAnalysis?.teamFeedback === 'string'
+      ? existingAnalysis.teamFeedback
+      : ''
+  );
   const [actionItems, setActionItems] = useState<string[]>(existingAnalysis?.actionItems || ['']);
 
   const handleSubmit = () => {
@@ -106,7 +110,7 @@ export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({
       return;
     }
 
-    const analysis: WinLossAnalysis = {
+    const analysis: WinLossAnalysisRecord = {
       id: existingAnalysis?.id || `analysis-${Date.now()}`,
       rfpId,
       outcome,
@@ -121,7 +125,7 @@ export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({
       teamFeedback,
       actionItems: actionItems.filter(a => a.trim()),
       completedAt: new Date().toISOString(),
-      completedBy: user?.id || 'current-user',
+      completedBy: localStorage.getItem('userId') || 'current-user',
     };
 
     onAnalysisSubmit(analysis);
@@ -243,10 +247,11 @@ export const WinLossAnalysis: React.FC<WinLossAnalysisProps> = ({
               <CardBody>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="finalContractValue">
                       Final Contract Value
                     </label>
                     <input
+                      id="finalContractValue"
                       type="number"
                       value={finalContractValue}
                       onChange={(e) => setFinalContractValue(Number(e.target.value))}

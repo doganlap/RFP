@@ -4,8 +4,12 @@ import bcrypt from 'bcryptjs';
 
 export class AuthService {
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'your-super-secret-key';
-    this.jwtExpiry = process.env.JWT_EXPIRY || '24h';
+    const clientSecret = import.meta.env.VITE_AUTH_JWT_SECRET;
+    if (!clientSecret) {
+      throw new Error('VITE_AUTH_JWT_SECRET is required for AuthService initialization.');
+    }
+    this.jwtSecret = clientSecret;
+    this.jwtExpiry = import.meta.env.VITE_AUTH_JWT_EXPIRY || '24h';
   }
 
   // User Roles and Permissions

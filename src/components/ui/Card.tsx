@@ -47,20 +47,25 @@ export const Card: React.FC<CardProps> = ({
 export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   subtitle?: string;
+  action?: React.ReactNode;
 }
 
 export const CardHeader: React.FC<CardHeaderProps> = ({
   title,
   subtitle,
+  action,
   children,
   className,
   ...props
 }) => {
   return (
-    <div className={cn('border-b border-gray-200 pb-4 mb-4', className)} {...props}>
-      {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
-      {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
-      {children}
+    <div className={cn('border-b border-gray-200 pb-4 mb-4 flex justify-between items-start', className)} {...props}>
+      <div className="flex-1">
+        {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
+        {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+        {children}
+      </div>
+      {action && <div className="ml-4">{action}</div>}
     </div>
   );
 };

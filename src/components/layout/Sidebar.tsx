@@ -4,6 +4,7 @@
 import React from 'react';
 import { useAppStore } from '../../store';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 import {
   Home,
   FileText,
@@ -22,19 +23,20 @@ interface NavItem {
   current?: boolean;
 }
 
-const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home, current: true },
-  { name: 'RFPs', href: '/rfps', icon: FileText },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Legal Review', href: '/sme/legal', icon: Shield },
-  { name: 'Finance Review', href: '/sme/finance', icon: DollarSign },
-  { name: 'Tech Review', href: '/sme/tech', icon: Code },
-  { name: 'Team', href: '/team', icon: Users },
-  { name: 'Settings', href: '/settings', icon: Settings },
-];
-
 export const Sidebar: React.FC = () => {
   const sidebarOpen = useAppStore((state) => state.sidebarOpen);
+  const { t } = useTranslation();
+
+  const navigation: NavItem[] = [
+    { name: t('dashboard'), href: '/dashboard', icon: Home, current: true },
+    { name: t('rfps'), href: '/rfps', icon: FileText },
+    { name: t('analytics'), href: '/analytics', icon: BarChart3 },
+    { name: t('legal_review'), href: '/sme/legal', icon: Shield },
+    { name: t('finance_review'), href: '/sme/finance', icon: DollarSign },
+    { name: t('tech_review'), href: '/sme/tech', icon: Code },
+    { name: t('team'), href: '/team', icon: Users },
+    { name: t('settings'), href: '/settings', icon: Settings },
+  ];
 
   return (
     <div
@@ -62,7 +64,7 @@ export const Sidebar: React.FC = () => {
             </svg>
           </div>
           {sidebarOpen && (
-            <span className="text-lg font-bold text-white">RFP Platform</span>
+            <span className="text-lg font-bold text-white">{t('rfp_platform')}</span>
           )}
         </div>
       </div>
@@ -100,8 +102,8 @@ export const Sidebar: React.FC = () => {
           <div className="h-8 w-8 rounded-full bg-green-500" />
           {sidebarOpen && (
             <div className="ml-3">
-              <p className="text-sm font-medium text-white">Online</p>
-              <p className="text-xs text-gray-400">All systems operational</p>
+              <p className="text-sm font-medium text-white">{t('online')}</p>
+              <p className="text-xs text-gray-400">{t('all_systems_operational')}</p>
             </div>
           )}
         </div>

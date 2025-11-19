@@ -8,6 +8,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import type { PreQualificationCriteria, PreQualificationResponse, PreQualificationResult } from '../../types/workflow';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 const DEFAULT_CRITERIA: PreQualificationCriteria[] = [
   // Strategic Alignment
@@ -123,6 +124,7 @@ export const PreQualificationScreen: React.FC<PreQualificationScreenProps> = ({
   onComplete,
   onCancel
 }) => {
+  const { user } = useAuth();
   const [responses, setResponses] = useState<Map<string, PreQualificationResponse>>(new Map());
   const [currentStep, setCurrentStep] = useState(0);
   const [showResults, setShowResults] = useState(false);

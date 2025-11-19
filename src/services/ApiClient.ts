@@ -1,145 +1,98 @@
-// Production API Client Service with Error Handling & Retry Logic
-// src/services/ApiClient.ts
+declare const API_URL: string;
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+type QueryParams = Record<string, string | number | boolean | undefined | null>;
 
-interface RetryConfig {
-  maxRetries: number;
-  delayMs: number;
-  backoffMultiplier: number;
+interface RequestOptions extends RequestInit {
+  query?: QueryParams;
 }
 
-interface ApiError extends Error {
-  status?: number;
-  data?: any;
+interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 class ApiClient {
-  token: string | null;
-  retryConfig: RetryConfig;
+  private token: string | null;
+  private readonly baseUrl: string;
 
-  constructor() {
-    this.token = localStorage.getItem('authToken');
-    this.retryConfig = {
-      maxRetries: 3,
-      delayMs: 1000,
-      backoffMultiplier: 2
-    };
+  constructor(baseUrl: string = API_URL) {
+    this.baseUrl = baseUrl;
+    this.token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   }
 
   setToken(token: string) {
     this.token = token;
-    localStorage.setItem('authToken', token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('authToken', token);
+    }
   }
 
   clearToken() {
     this.token = null;
-    localStorage.removeItem('authToken');
-  }
-
-  /**
-   * Retry logic with exponential backoff
-   */
-  private async retryWithBackoff<T>(
-    fn: () => Promise<T>,
-    retries: number = 0
-  ): Promise<T> {
-    try {
-      return await fn();
-    } catch (error: any) {
-      const isRetryable =
-        error.status === 429 || // Rate limited
-        error.status === 503 || // Service unavailable
-        error.status >= 500;    // Server errors
-
-      if (isRetryable && retries < this.retryConfig.maxRetries) {
-        const delay = this.retryConfig.delayMs * Math.pow(this.retryConfig.backoffMultiplier, retries);
-        console.warn(`Retrying (attempt ${retries + 1}/${this.retryConfig.maxRetries}) after ${delay}ms`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return this.retryWithBackoff(fn, retries + 1);
-      }
-      throw error;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
     }
   }
 
-  /**
-   * Main request method with error handling
-   */
-  async request(endpoint: string, options: any = {}) {
-    return this.retryWithBackoff(async () => {
-      const url = `${API_URL}${endpoint}`;
-      const headers: any = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      };
+  private buildUrl(endpoint: string, query?: QueryParams): string {
+    const [path, existingQuery] = endpoint.split('?');
+    const params = new URLSearchParams(existingQuery);
 
-      if (this.token) {
-        headers['Authorization'] = `Bearer ${this.token}`;
-      }
-
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), options.timeout || 30000);
-
-        const response = await fetch(url, {
-          ...options,
-          headers,
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        const data = await response.json().catch(() => ({}));
-
-        // Handle 401 - clear token and redirect to login
-        if (response.status === 401) {
-          this.clearToken();
-          window.location.href = '/login';
-          throw this.createError('Session expired. Please log in again.', 401, data);
+    if (query) {
+      Object.entries(query).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') {
+          return;
         }
+        params.set(key, String(value));
+      });
+    }
 
-        // Handle other errors
-        if (!response.ok) {
-          throw this.createError(
-            data.error || `HTTP ${response.status}`,
-            response.status,
-            data
-          );
-        }
-
-        return data;
-      } catch (error: any) {
-        if (error.name === 'AbortError') {
-          throw this.createError('Request timeout. Please try again.', 408, null);
-        }
-
-        // Re-throw API errors with status
-        if (error.status) {
-          throw error;
-        }
-
-        // Handle network errors
-        if (error instanceof TypeError) {
-          throw this.createError(
-            'Network error. Please check your connection.',
-            0,
-            null
-          );
-        }
-
-        throw error;
-      }
-    });
+    const queryString = params.toString();
+    return `${this.baseUrl}${path}${queryString ? `?${queryString}` : ''}`;
   }
 
-  /**
-   * Create structured API error
-   */
-  private createError(message: string, status?: number, data?: any): ApiError {
-    const error: ApiError = new Error(message);
-    error.status = status;
-    error.data = data;
-    return error;
+  async request<T = unknown>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    const url = this.buildUrl(endpoint, options.query);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (options.headers && typeof options.headers === 'object') {
+      Object.assign(headers, options.headers);
+    }
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (response.status === 401) {
+      this.clearToken();
+    }
+
+    // Some endpoints (DELETE) may not return JSON
+    let data: any = null;
+    const text = await response.text();
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = text;
+      }
+    }
+
+    if (!response.ok) {
+      const message = typeof data === 'object' && data?.error ? data.error : `HTTP ${response.status}`;
+      throw new Error(message);
+    }
+
+    return data as T;
   }
 
   // Auth endpoints
@@ -179,9 +132,7 @@ class ApiClient {
   }
 
   logout() {
-    return this.request('/api/auth/logout', {
-      method: 'POST',
-    });
+    return this.request('/api/auth/logout', { method: 'POST' });
   }
 
   deactivateAccount(password: string, reason?: string, deleteData?: boolean) {
@@ -192,34 +143,32 @@ class ApiClient {
   }
 
   // RFP endpoints
-  getRFPs(page = 1, limit = 20, status = null) {
-    let url = `/api/rfp/list?page=${page}&limit=${limit}`;
-    if (status) url += `&status=${status}`;
-    return this.request(url);
+  getRFPs(params: { page?: number; limit?: number; status?: string } = {}) {
+    return this.request<PaginatedResult<any> | any[]>('/api/rfps', {
+      query: params,
+    });
   }
 
   getRFPById(id: string) {
-    return this.request(`/api/rfp/${id}`);
+    return this.request(`/api/rfps/${id}`);
   }
 
-  createRFP(data: any) {
-    return this.request('/api/rfp/create', {
+  createRFP(data: Record<string, unknown>) {
+    return this.request('/api/rfps', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  updateRFP(id: string, data: any) {
-    return this.request(`/api/rfp/detail?id=${id}`, {
+  updateRFP(id: string, data: Record<string, unknown>) {
+    return this.request(`/api/rfps/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   deleteRFP(id: string) {
-    return this.request(`/api/rfp/detail?id=${id}`, {
-      method: 'DELETE',
-    });
+    return this.request(`/api/rfps/${id}`, { method: 'DELETE' });
   }
 
   // Win/Loss endpoints
@@ -236,11 +185,11 @@ class ApiClient {
 
   // Task endpoints
   getTasks(rfpId: string) {
-    return this.request(`/api/tasks?rfpId=${rfpId}`);
+    return this.request(`/api/rfps/${rfpId}/tasks`);
   }
 
-  createTask(data: any) {
-    return this.request('/api/tasks', {
+  createTask(rfpId: string, data: any) {
+    return this.request(`/api/rfps/${rfpId}/tasks`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -271,57 +220,79 @@ class ApiClient {
   }
 
   // Document endpoints
-  async uploadDocument(rfpId: string, file: File, documentType: string = 'general') {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('document_type', documentType);
-
+  uploadDocument(rfpId: string, formData: FormData) {
     const url = `${API_URL}/api/rfps/${rfpId}/documents`;
-    const headers: any = {};
+    const headers: Record<string, string> = {};
 
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-
+    return fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    }).then(async (response) => {
       const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}`);
+        throw new Error(data?.error || 'Document upload failed');
       }
-
       return data;
-    } catch (error) {
-      console.error('Document upload error:', error);
-      throw error;
-    }
+    });
   }
 
-  getDocument(documentId: string) {
-    return this.request(`/api/documents/${documentId}`);
+  searchDocuments(rfpId: string, query: string) {
+    return this.request(`/api/rfps/${rfpId}/documents/search`, {
+      query: { q: query },
+    });
   }
 
-  downloadDocument(documentId: string) {
-    return this.request(`/api/documents/${documentId}/download`);
-  }
+  downloadDocument(documentId: string, fileName?: string) {
+    const url = `${this.baseUrl}/api/documents/${documentId}/download`;
 
-  searchDocuments(rfpId: string, query: string, type?: string, dateFrom?: string, dateTo?: string) {
-    let url = `/api/rfps/${rfpId}/documents/search?q=${encodeURIComponent(query)}`;
-    if (type) url += `&type=${type}`;
-    if (dateFrom) url += `&dateFrom=${dateFrom}`;
-    if (dateTo) url += `&dateTo=${dateTo}`;
-    return this.request(url);
+    return fetch(url, {
+      headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.status}`);
+        }
+        return response.blob();
+      })
+      .then((blob) => {
+        // Create a temporary URL and trigger download
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName || `document`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(a);
+      });
   }
 
   deleteDocument(documentId: string) {
     return this.request(`/api/documents/${documentId}`, {
       method: 'DELETE',
+    });
+  }
+
+  shareDocument(documentId: string, data: { recipientEmail: string; permission: string }) {
+    return this.request(`/api/documents/${documentId}/share`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  getDocumentVersions(documentId: string) {
+    return this.request(`/api/documents/${documentId}/versions`);
+  }
+
+  revertDocumentVersion(documentId: string, versionId: string) {
+    return this.request(`/api/documents/${documentId}/revert`, {
+      method: 'POST',
+      body: JSON.stringify({ versionId }),
     });
   }
 

@@ -5,13 +5,39 @@ import { useAppStore } from '../store';
 import { apiClient } from '../services/ApiClient';
 import type { User } from '../types';
 
+interface LoginResponse {
+  success: boolean;
+  token?: string;
+  user?: {
+    id?: string;
+    email?: string;
+    role?: string;
+    name?: string;
+  };
+}
+
 export const useAuth = () => {
   const user = useAppStore((state) => state.user);
   const setUser = useAppStore((state) => state.setUser);
 
+  const getPermissionsForRole = (role: string): string[] => {
+    const rolePermissions: Record<string, string[]> = {
+      'admin': ['rfp.read', 'rfp.create', 'rfp.edit', 'rfp.delete', 'team.assign', 'users.manage'],
+      'sales_rep': ['rfp.read', 'rfp.create', 'rfp.edit', 'go_no_go.submit'],
+      'sales_manager': ['rfp.read', 'rfp.create', 'rfp.edit', 'rfp.delete', 'go_no_go.approve', 'team.assign'],
+      'presales_lead': ['rfp.read', 'rfp.edit', 'solution.plan', 'team.view', 'arch.review'],
+      'solution_architect': ['rfp.read', 'solution.plan', 'boq.edit', 'arch.review', 'compliance.map'],
+      'pricing_finance': ['rfp.read', 'pricing.model', 'discount.request', 'pricing.approve'],
+      'legal_contracts': ['rfp.read', 'rfp.edit'],
+      'compliance_grc': ['rfp.read', 'compliance.map'],
+      'pmo': ['rfp.read', 'team.view'],
+    };
+    return rolePermissions[role.toLowerCase()] || [];
+  };
+
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      const response = await apiClient.login(email, password);
+      const response = await apiClient.login(email, password) as LoginResponse;
 
       if (response.success && response.token) {
         apiClient.setToken(response.token);
@@ -23,7 +49,7 @@ export const useAuth = () => {
           role: (response.user?.role || 'sales_rep') as any,
           firstName: nameParts[0] || '',
           lastName: nameParts.slice(1).join(' ') || '',
-          permissions: getPermissionsForRole(response.user?.role || 'sales_rep'),
+          permissions: getPermissionsForRole(response.user?.role || 'sales_rep') as any,
         };
         setUser(user);
       }
@@ -46,7 +72,7 @@ export const useAuth = () => {
     lastName: string
   ): Promise<void> => {
     try {
-      const response = await apiClient.register(email, password, firstName, lastName, 'sales_rep');
+      const response = await apiClient.register(email, password, firstName, lastName, 'sales_rep') as LoginResponse;
 
       if (response.success && response.token) {
         apiClient.setToken(response.token);
@@ -56,7 +82,7 @@ export const useAuth = () => {
           role: (response.user?.role || 'sales_rep') as any,
           firstName: firstName,
           lastName: lastName,
-          permissions: getPermissionsForRole(response.user?.role || 'sales_rep'),
+          permissions: getPermissionsForRole(response.user?.role || 'sales_rep') as any,
         };
         setUser(user);
       }
@@ -79,21 +105,6 @@ export const useAuth = () => {
   const hasRole = (role: string): boolean => {
     if (!user) return false;
     return user.role === role;
-  };
-
-  const getPermissionsForRole = (role: string): string[] => {
-    const rolePermissions: Record<string, string[]> = {
-      'admin': ['rfp.read', 'rfp.create', 'rfp.edit', 'rfp.delete', 'team.assign', 'users.manage'],
-      'sales_rep': ['rfp.read', 'rfp.create', 'rfp.edit', 'go_no_go.submit'],
-      'sales_manager': ['rfp.read', 'rfp.create', 'rfp.edit', 'rfp.delete', 'go_no_go.approve', 'team.assign'],
-      'presales_lead': ['rfp.read', 'rfp.edit', 'solution.plan', 'team.view', 'arch.review'],
-      'solution_architect': ['rfp.read', 'solution.plan', 'boq.edit', 'arch.review', 'compliance.map'],
-      'pricing_finance': ['rfp.read', 'pricing.model', 'discount.request', 'pricing.approve'],
-      'legal_contracts': ['rfp.read', 'rfp.edit'],
-      'compliance_grc': ['rfp.read', 'compliance.map'],
-      'pmo': ['rfp.read', 'team.view'],
-    };
-    return rolePermissions[role.toLowerCase()] || [];
   };
 
   return {

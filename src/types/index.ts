@@ -7,7 +7,7 @@ export interface User {
   department?: string;
   firstName?: string;
   lastName?: string;
-  permissions: Permission[];
+  permissions: Array<Permission | string>;
 }
 
 export enum UserRole {
@@ -49,6 +49,7 @@ export interface RFP {
   priority?: Priority;
   createdAt: string;
   updatedAt: string;
+  metadata?: Record<string, unknown>;
 }
 
 export enum RFPStatus {

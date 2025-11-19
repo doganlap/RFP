@@ -139,6 +139,18 @@ export interface NegotiationItem {
   status: 'open' | 'agreed' | 'conceded' | 'deadlocked';
   priority: 'must-have' | 'should-have' | 'nice-to-have';
   notes?: string;
+  history?: NegotiationHistoryEntry[];
+}
+
+export interface NegotiationHistoryEntry {
+  timestamp: string;
+  user: string;
+  action: 'created' | 'updated' | 'status-changed';
+  changes?: Array<{
+    field: keyof Omit<NegotiationItem, 'id' | 'history'>;
+    oldValue: any;
+    newValue: any;
+  }>;
 }
 
 export interface Contact {
@@ -153,25 +165,27 @@ export interface WinLossAnalysis {
   id: string;
   rfpId: string;
   outcome: 'won' | 'lost' | 'no-decision';
-  contractValue?: number;
-  winDate?: string;
-  lossDate?: string;
-  primaryReasons: WinLossReason[];
-  competitorInfo?: CompetitorInfo;
+  primaryReason: WinLossReason;
+  secondaryReasons?: WinLossReason[];
+  finalContractValue?: number;
+  competitorWon?: string;
+  ratings?: {
+    technicalQuality: number;
+    pricingCompetitiveness: number;
+    presentationQuality: number;
+    teamPerformance: number;
+    timelinessOfDelivery: number;
+  };
+  strengths: string[];
+  weaknesses: string[];
   lessonsLearned: string[];
-  strengthsIdentified: string[];
-  weaknessesIdentified: string[];
-  recommendations: string[];
-  analyzedBy: string;
-  analyzedAt: string;
-  teamFeedback?: TeamFeedback[];
+  teamFeedback?: string | TeamFeedback[];
+  actionItems: string[];
+  completedAt: string;
+  completedBy: string;
 }
 
-export interface WinLossReason {
-  category: 'pricing' | 'technical' | 'relationship' | 'experience' | 'timeline' | 'other';
-  description: string;
-  impact: 'primary' | 'secondary' | 'minor';
-}
+export type WinLossReason = 'pricing' | 'technical' | 'relationship' | 'experience' | 'timeline' | 'compliance' | 'team' | 'innovation' | 'other';
 
 export interface CompetitorInfo {
   name?: string;

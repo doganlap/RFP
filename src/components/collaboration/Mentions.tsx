@@ -15,7 +15,6 @@ interface MentionsProps {
 
 const Mentions: React.FC<MentionsProps> = ({ onMentionRead }) => {
   const [mentions, setMentions] = useState<Mention[]>([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Load mentions from API
@@ -56,9 +55,7 @@ const Mentions: React.FC<MentionsProps> = ({ onMentionRead }) => {
         Mentions ({unreadMentions.length} unread)
       </h3>
 
-      {loading ? (
-        <p className="text-gray-500">Loading mentions...</p>
-      ) : mentions.length === 0 ? (
+      {mentions.length === 0 ? (
         <p className="text-gray-500">No mentions yet. Use @ to mention team members.</p>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto">

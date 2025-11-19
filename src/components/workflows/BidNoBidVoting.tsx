@@ -2,7 +2,7 @@
  * Bid-No-Bid Committee Voting System
  * Democratic decision-making for RFP pursuit
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';

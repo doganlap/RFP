@@ -178,7 +178,7 @@ export class Office365Service {
 
       const data = await response.json();
 
-      return data.value.map((msg: any) => ({
+      return Promise.all(data.value.map(async (msg: any) => ({
         id: msg.id,
         subject: msg.subject,
         from: msg.from.emailAddress.address,
@@ -188,7 +188,7 @@ export class Office365Service {
         bodyType: msg.body.contentType.toLowerCase() === 'html' ? 'html' : 'text',
         receivedAt: msg.receivedDateTime,
         attachments: msg.hasAttachments ? await this.getAttachments(msg.id) : []
-      }));
+      })));
     } catch (error) {
       console.error('Office 365 get emails error:', error);
       throw error;

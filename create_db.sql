@@ -1,0 +1,1 @@
+CREATE DATABASE rfp_platform;

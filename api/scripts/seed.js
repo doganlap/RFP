@@ -23,25 +23,28 @@ async function seedDatabase() {
   try {
     console.log('🌱 Starting database seeding...');
 
-    // Read and execute seed.sql (from root database folder)
-    const seedPath = path.join(__dirname, '../../database/seed.sql');
+    // Read and execute enhanced_seed.sql (from root database folder)
+    const seedPath = path.join(__dirname, '../../database/enhanced_seed.sql');
     const seedSQL = fs.readFileSync(seedPath, 'utf-8');
 
-    console.log('📝 Executing seed script...');
+    console.log('📝 Executing enhanced seed script...');
     await client.query(seedSQL);
 
-    console.log('✅ Database seeding completed successfully!');
-    console.log('\n📊 Seeded Data Summary:');
-    console.log('  ✓ 3 Tenants');
-    console.log('  ✓ 7 Users');
-    console.log('  ✓ 4 Clients');
-    console.log('  ✓ 4 RFPs (2 won, 1 lost, 1 in progress)');
-    console.log('  ✓ 2 Win/Loss Analyses');
-    console.log('  ✓ 3 Comments with threading');
-    console.log('  ✓ 2 Mentions');
-    console.log('  ✓ 3 Discussions');
-    console.log('  ✓ 4 Integration logs');
-    console.log('  ✓ 2 DocuSign envelopes');
+    console.log('✅ Enhanced database seeding completed successfully!');
+    console.log('\n📊 Enhanced Seeded Data Summary:');
+    console.log('  ✓ 10 Tenants');
+    console.log('  ✓ 100 Users (distributed across tenants)');
+    console.log('  ✓ 100 Clients');
+    console.log('  ✓ 100 RFPs (with realistic statuses and values)');
+    console.log('  ✓ 100 Win/Loss Analyses');
+    console.log('  ✓ 100 Comments with threading');
+    console.log('  ✓ 100 Mentions');
+    console.log('  ✓ 100 Discussions');
+    console.log('  ✓ 100 Integration logs');
+    console.log('  ✓ 100 DocuSign envelopes');
+    console.log('  ✓ 100 User sessions');
+    console.log('  ✓ 100 Documents (if table exists)');
+    console.log('\n🎉 Database enriched with realistic sample data for enhanced testing and demonstration!');
 
   } catch (error) {
     console.error('❌ Error seeding database:', error.message);

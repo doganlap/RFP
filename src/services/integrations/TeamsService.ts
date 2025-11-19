@@ -19,7 +19,6 @@ export interface TeamsMessage {
 
 class TeamsService {
   private config: TeamsConfig | null = null;
-  private readonly graphUrl = 'https://graph.microsoft.com/v1.0';
 
   async setConfig(config: TeamsConfig): Promise<void> {
     this.config = config;

@@ -1,5 +1,6 @@
 -- Enterprise RFP Platform Database Schema
 -- PostgreSQL 14+ with UUID extension
+-- @mssql-ignore
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

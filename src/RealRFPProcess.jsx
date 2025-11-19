@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   IntakeStage,
   GoNoGoStage,
@@ -13,7 +14,8 @@ import {
 import TaskManagement from './TaskManagement.jsx';
 import ClarificationsManagement from './ClarificationsManagement.jsx';
 import SLAMonitoring from './SLAMonitoring.jsx';
-import { apiClient as ApiClient } from './services/ApiClient';// Real RFP Process Implementation based on Sales ↔ Pre-Sales Blueprint
+import { useRFP } from './hooks/useRFP';
+// Real RFP Process Implementation based on Sales ↔ Pre-Sales Blueprint
 // States: intake → go_no_go → planning → solutioning → pricing → proposal_build → approvals → submission → post_bid
 
 const RFP_STATES = {
@@ -42,53 +44,94 @@ const ROLES = {
   PMO: 'pmo'
 };
 
+const mapStageToWorkflowState = (stage) => {
+  switch (stage) {
+    case 'STAGE_1_TRIAGE':
+      return RFP_STATES.INTAKE;
+    case 'STAGE_2_BUSINESS_REVIEW':
+      return RFP_STATES.GO_NO_GO;
+    case 'STAGE_3_SME_QUALIFICATION':
+      return RFP_STATES.PLANNING;
+    case 'STAGE_4_PROPOSAL':
+      return RFP_STATES.PROPOSAL_BUILD;
+    case 'STAGE_5_SUBMISSION':
+      return RFP_STATES.SUBMISSION;
+    default:
+      return RFP_STATES.INTAKE;
+  }
+};
+
 // Real RFP Process Component
 export const RealRFPProcess = ({ rfpId }) => {
+  const params = useParams();
+  const routeRfpId = params?.id;
+  const derivedRfpId = rfpId || routeRfpId || null;
+  const { rfps, fetchRFPs, loadRFP, setCurrentRFP } = useRFP();
+
   const [currentState, setCurrentState] = useState(RFP_STATES.INTAKE);
   const [activeTab, setActiveTab] = useState('process');
   const [rfpData, setRfpData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch RFP data from API
   useEffect(() => {
-    const fetchRFPData = async () => {
-      try {
-        setLoading(true);
-        const response = await ApiClient.getRFPById(rfpId);
-        if (response && response.data) {
-          setRfpData(response.data);
-          // Set current state based on fetched data
-          if (response.data.stage) {
-            setCurrentState(response.data.stage);
-          }
-        }
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching RFP data:', err);
-        setError('Failed to load RFP data');
-        // Set default data if fetch fails
-        setRfpData({
-          id: rfpId,
-          title: "RFP Data",
-          client: "Loading...",
-          value: 0,
-          deadline: new Date().toISOString().split('T')[0],
-          category: "Unknown",
-          assignedTeam: [],
-          approvals: {},
-          tasks: [],
-          clarifications: []
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (rfpId) {
-      fetchRFPData();
+    if (!rfps.length) {
+      fetchRFPs().catch((err) => {
+        console.error('Error fetching RFPs list:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load RFP list');
+      });
     }
-  }, [rfpId]);
+  }, [rfps.length, fetchRFPs]);
+
+  useEffect(() => {
+    const targetId = derivedRfpId || (rfps.length ? rfps[0].id : null);
+
+    if (!targetId) {
+      setLoading(false);
+      setError('No RFPs available. Create one from the RFP list to get started.');
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+
+    loadRFP(targetId)
+      .then((rfp) => {
+        if (!isMounted) return;
+        if (!rfp) {
+          setError('RFP not found');
+          return;
+        }
+
+        const enriched = {
+          ...rfp,
+          value: rfp.estimatedValue || 0,
+          deadline: rfp.submissionDeadline
+            ? new Date(rfp.submissionDeadline).toISOString().split('T')[0]
+            : 'Not set',
+          category: rfp.tags?.[0] || 'General',
+        };
+
+        setRfpData(enriched);
+        setCurrentRFP(rfp);
+        setCurrentState(mapStageToWorkflowState(rfp.stage));
+        setError(null);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Error fetching RFP data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load RFP data');
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [derivedRfpId, rfps, loadRFP, setCurrentRFP]);
 
   if (loading) {
     return (

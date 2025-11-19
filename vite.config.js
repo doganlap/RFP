@@ -39,9 +39,4 @@ export default defineConfig({
   css: {
     devSourcemap: false
   },
-  define: {
-    '__firebase_config': JSON.stringify('{}'),
-    '__app_id': JSON.stringify('rfp-platform-prod'),
-    '__initial_auth_token': JSON.stringify('')
-  }
 })

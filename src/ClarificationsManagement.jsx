@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Clarifications Management Component
 export const ClarificationsManagement = ({ rfpId }) => {
+  const { t } = useTranslation();
   const [clarifications, setClarifications] = useState([
     {
       id: 'clar-001',
@@ -15,7 +17,7 @@ export const ClarificationsManagement = ({ rfpId }) => {
       raised_by: 'Solution Architect'
     },
     {
-      id: 'clar-002', 
+      id: 'clar-002',
       question: 'Are there any specific compliance certifications required beyond SOC 2?',
       priority: 'medium',
       raised_at: '2025-01-21T09:15:00Z',
@@ -51,8 +53,8 @@ export const ClarificationsManagement = ({ rfpId }) => {
   };
 
   const answerClarification = (id, answer) => {
-    setClarifications(clarifications.map(c => 
-      c.id === id 
+    setClarifications(clarifications.map(c =>
+      c.id === id
         ? { ...c, answer, answered_at: new Date().toISOString(), status: 'answered' }
         : c
     ));
@@ -60,11 +62,11 @@ export const ClarificationsManagement = ({ rfpId }) => {
 
   const getSLAStatus = (clarification) => {
     if (clarification.status === 'answered') return 'completed';
-    
+
     const raisedTime = new Date(clarification.raised_at);
     const now = new Date();
     const hoursElapsed = (now - raisedTime) / (1000 * 60 * 60);
-    
+
     if (hoursElapsed > clarification.sla_hours) return 'overdue';
     if (hoursElapsed > clarification.sla_hours * 0.8) return 'warning';
     return 'on_time';
@@ -93,7 +95,7 @@ export const ClarificationsManagement = ({ rfpId }) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
@@ -105,21 +107,21 @@ export const ClarificationsManagement = ({ rfpId }) => {
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Clarifications Management</h2>
+        <h2 className="text-xl font-semibold">{t('clarifications_management')}</h2>
         <div className="flex space-x-4 text-sm">
-          <span className="text-yellow-600">📋 {pendingCount} Pending</span>
+          <span className="text-yellow-600">📋 {pendingCount} {t('pending')}</span>
           {overdueCount > 0 && (
-            <span className="text-red-600">⚠️ {overdueCount} Overdue</span>
+            <span className="text-red-600">⚠️ {overdueCount} {t('overdue')}</span>
           )}
         </div>
       </div>
 
       {/* Add New Clarification */}
       <div className="bg-blue-50 p-4 rounded-lg mb-6">
-        <h3 className="font-medium mb-3">Raise New Clarification</h3>
+        <h3 className="font-medium mb-3">{t('raise_new_clarification')}</h3>
         <div className="space-y-3">
           <textarea
-            placeholder="What question do you need clarified?"
+            placeholder={t('clarification_question_placeholder')}
             value={newClarification.question}
             onChange={(e) => setNewClarification({...newClarification, question: e.target.value})}
             className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
@@ -130,13 +132,13 @@ export const ClarificationsManagement = ({ rfpId }) => {
               onChange={(e) => setNewClarification({...newClarification, priority: e.target.value})}
               className="border border-gray-300 rounded-md px-3 py-2"
             >
-              <option value="low">Low Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
+              <option value="low">{t('low_priority')}</option>
+              <option value="medium">{t('medium_priority')}</option>
+              <option value="high">{t('high_priority')}</option>
             </select>
             <input
               type="text"
-              placeholder="Your name/role"
+              placeholder={t('your_name_role')}
               value={newClarification.raised_by}
               onChange={(e) => setNewClarification({...newClarification, raised_by: e.target.value})}
               className="border border-gray-300 rounded-md px-3 py-2"
@@ -146,7 +148,7 @@ export const ClarificationsManagement = ({ rfpId }) => {
             onClick={addClarification}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            Raise Clarification
+            {t('raise_clarification')}
           </button>
         </div>
       </div>
@@ -163,39 +165,39 @@ export const ClarificationsManagement = ({ rfpId }) => {
                     {clarification.priority.toUpperCase()}
                   </span>
                   <span className={`px-2 py-1 rounded text-xs ${getSLAColor(slaStatus)}`}>
-                    {slaStatus === 'completed' ? 'ANSWERED' : 
-                     slaStatus === 'overdue' ? 'OVERDUE' :
-                     slaStatus === 'warning' ? 'DUE SOON' : 'ON TIME'}
+                    {slaStatus === 'completed' ? t('answered') :
+                     slaStatus === 'overdue' ? t('overdue') :
+                     slaStatus === 'warning' ? t('due_soon') : t('on_time')}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500">
                   ID: {clarification.id}
                 </div>
               </div>
-              
+
               <div className="mb-3">
-                <h4 className="font-medium text-gray-900 mb-1">Question:</h4>
+                <h4 className="font-medium text-gray-900 mb-1">{t('question')}:</h4>
                 <p className="text-gray-700">{clarification.question}</p>
               </div>
-              
+
               <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                <span>👤 Raised by: {clarification.raised_by}</span>
+                <span>👤 {t('raised_by')}: {clarification.raised_by}</span>
                 <span>📅 {formatTimeAgo(clarification.raised_at)}</span>
-                <span>⏱️ SLA: {clarification.sla_hours}h</span>
+                <span>⏱️ {t('sla')}: {clarification.sla_hours}h</span>
               </div>
-              
+
               {clarification.status === 'answered' ? (
                 <div className="bg-green-50 p-3 rounded">
-                  <h4 className="font-medium text-green-900 mb-1">Answer:</h4>
+                  <h4 className="font-medium text-green-900 mb-1">{t('answer')}:</h4>
                   <p className="text-green-800">{clarification.answer}</p>
                   <div className="text-xs text-green-600 mt-2">
-                    Answered {formatTimeAgo(clarification.answered_at)}
+                    {t('answered')} {formatTimeAgo(clarification.answered_at)}
                   </div>
                 </div>
               ) : (
                 <div className="bg-yellow-50 p-3 rounded">
                   <div className="flex justify-between items-center">
-                    <span className="text-yellow-800 text-sm">⏳ Awaiting client response</span>
+                    <span className="text-yellow-800 text-sm">⏳ {t('awaiting_client_response')}</span>
                     <button
                       onClick={() => {
                         const answer = prompt('Enter the answer:');
@@ -203,7 +205,7 @@ export const ClarificationsManagement = ({ rfpId }) => {
                       }}
                       className="bg-yellow-600 text-white px-3 py-1 rounded text-xs hover:bg-yellow-700"
                     >
-                      Add Answer
+                      {t('add_answer')}
                     </button>
                   </div>
                 </div>
@@ -216,7 +218,7 @@ export const ClarificationsManagement = ({ rfpId }) => {
       {clarifications.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl mb-2">💬</div>
-          <p>No clarifications raised yet</p>
+          <p>{t('no_clarifications_raised_yet')}</p>
         </div>
       )}
     </div>

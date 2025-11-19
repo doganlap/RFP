@@ -6,9 +6,9 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { Input } from '../ui/Input';
 import type { Risk, RiskAssessment, RiskCategory } from '../../types/workflow';
-import { AlertTriangle, Plus, Trash2, Shield } from 'lucide-react';
+import { Plus, Trash2, Shield } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 const RISK_CATEGORIES: { value: RiskCategory; label: string; icon: string }[] = [
   { value: 'technical' as RiskCategory, label: 'Technical Risk', icon: '⚙️' },
@@ -47,6 +47,7 @@ export const RiskAssessmentWorkflow: React.FC<RiskAssessmentWorkflowProps> = ({
   onSave,
   onCancel
 }) => {
+  const { user } = useAuth();
   const [risks, setRisks] = useState<Risk[]>(existingAssessment?.risks || []);
   const [newRisk, setNewRisk] = useState<Partial<Risk>>({
     category: 'technical' as RiskCategory,

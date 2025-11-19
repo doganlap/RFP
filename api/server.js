@@ -28,9 +28,19 @@ const app = express();
 const server = http.createServer(app);
 
 // Environment configuration
+const requireEnv = (name) => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+};
+
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
+const JWT_SECRET = requireEnv('JWT_SECRET');
+const AWS_REGION = requireEnv('AWS_REGION');
+const AWS_S3_BUCKET = requireEnv('AWS_S3_BUCKET');
 
 // Database connection
 const pool = new Pool({
@@ -50,7 +60,7 @@ const redis = Redis.createClient({
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-east-1'
+  region: AWS_REGION
 });
 
 // WebSocket server for real-time features
@@ -479,7 +489,7 @@ app.post('/api/rfps/:rfpId/documents', authenticate, upload.single('file'), asyn
     const s3Key = `rfps/${req.params.rfpId}/documents/${Date.now()}-${req.file.originalname}`;
 
     const uploadResult = await s3.upload({
-      Bucket: process.env.AWS_S3_BUCKET || 'rfp-platform-documents',
+      Bucket: AWS_S3_BUCKET,
       Key: s3Key,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,
@@ -644,7 +654,7 @@ app.get('/api/documents/:id/download', authenticate, async (req, res) => {
 
     // Generate signed URL
     const signedUrl = await s3.getSignedUrlPromise('getObject', {
-      Bucket: process.env.AWS_S3_BUCKET || 'rfp-platform-documents',
+      Bucket: AWS_S3_BUCKET,
       Key: document.filename,
       Expires: 3600,
       ResponseContentDisposition: `attachment; filename="${document.original_filename}"`
@@ -867,7 +877,7 @@ app.get('/health/detailed', async (req, res) => {
 
     // Check S3
     try {
-      await s3.headBucket({ Bucket: process.env.AWS_S3_BUCKET || 'rfp-platform-documents' }).promise();
+      await s3.headBucket({ Bucket: AWS_S3_BUCKET }).promise();
       health.services.s3 = { status: 'healthy' };
     } catch (error) {
       health.services.s3 = { status: 'unhealthy', error: error.message };

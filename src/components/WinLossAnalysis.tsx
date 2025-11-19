@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AnalyticsService from '../services/AnalyticsService';
+import { useTranslation } from 'react-i18next';
 
 interface WinLossRecord {
   id: string;
@@ -18,6 +19,7 @@ const WinLossAnalysis: React.FC = () => {
   const [data, setData] = useState<WinLossData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'won' | 'lost'>('overview');
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +37,7 @@ const WinLossAnalysis: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-4">Loading win/loss analysis...</div>;
+    return <div className="p-4">{t('loading_win_loss_analysis')}</div>;
   }
 
   const totalRFPs = (data?.won.length || 0) + (data?.lost.length || 0);
@@ -43,24 +45,24 @@ const WinLossAnalysis: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-6">Win/Loss Analysis</h2>
+      <h2 className="text-3xl font-bold mb-6">{t('win_loss_analysis')}</h2>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <p className="text-sm text-gray-600">Total RFPs</p>
+          <p className="text-sm text-gray-600">{t('total_rfps')}</p>
           <p className="text-2xl font-bold text-blue-600">{totalRFPs}</p>
         </div>
         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <p className="text-sm text-gray-600">Won</p>
+          <p className="text-sm text-gray-600">{t('won')}</p>
           <p className="text-2xl font-bold text-green-600">{data?.won.length || 0}</p>
         </div>
         <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-          <p className="text-sm text-gray-600">Lost</p>
+          <p className="text-sm text-gray-600">{t('lost')}</p>
           <p className="text-2xl font-bold text-red-600">{data?.lost.length || 0}</p>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-          <p className="text-sm text-gray-600">Win Rate</p>
+          <p className="text-sm text-gray-600">{t('win_rate')}</p>
           <p className="text-2xl font-bold text-purple-600">{winRate}%</p>
         </div>
       </div>
@@ -71,29 +73,29 @@ const WinLossAnalysis: React.FC = () => {
           onClick={() => setSelectedTab('overview')}
           className={`px-4 py-2 font-medium ${selectedTab === 'overview' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
         >
-          Overview
+          {t('overview')}
         </button>
         <button
           onClick={() => setSelectedTab('won')}
           className={`px-4 py-2 font-medium ${selectedTab === 'won' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-600'}`}
         >
-          Won Deals
+          {t('won_deals')}
         </button>
         <button
           onClick={() => setSelectedTab('lost')}
           className={`px-4 py-2 font-medium ${selectedTab === 'lost' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-600'}`}
         >
-          Lost Deals
+          {t('lost_deals')}
         </button>
       </div>
 
       {/* Content */}
       {selectedTab === 'overview' && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Key Insights</h3>
+          <h3 className="text-lg font-semibold">{t('key_insights')}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-2">Top Win Reasons</h4>
+              <h4 className="font-medium mb-2">{t('top_win_reasons')}</h4>
               <ul className="space-y-1 text-sm">
                 {data?.won.slice(0, 3).map((item) => (
                   <li key={item.id} className="text-gray-700">• {item.reason}</li>
@@ -101,7 +103,7 @@ const WinLossAnalysis: React.FC = () => {
               </ul>
             </div>
             <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-2">Top Loss Reasons</h4>
+              <h4 className="font-medium mb-2">{t('top_loss_reasons')}</h4>
               <ul className="space-y-1 text-sm">
                 {data?.lost.slice(0, 3).map((item) => (
                   <li key={item.id} className="text-gray-700">• {item.reason}</li>
@@ -114,12 +116,12 @@ const WinLossAnalysis: React.FC = () => {
 
       {selectedTab === 'won' && (
         <div className="bg-white rounded-lg border p-4">
-          <h3 className="font-semibold mb-4">Won Opportunities</h3>
+          <h3 className="font-semibold mb-4">{t('won_opportunities')}</h3>
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium">RFP ID</th>
-                <th className="px-4 py-2 text-left text-sm font-medium">Reason</th>
+                <th className="px-4 py-2 text-left text-sm font-medium">{t('rfp_id')}</th>
+                <th className="px-4 py-2 text-left text-sm font-medium">{t('reason')}</th>
               </tr>
             </thead>
             <tbody>
@@ -136,12 +138,12 @@ const WinLossAnalysis: React.FC = () => {
 
       {selectedTab === 'lost' && (
         <div className="bg-white rounded-lg border p-4">
-          <h3 className="font-semibold mb-4">Lost Opportunities</h3>
+          <h3 className="font-semibold mb-4">{t('lost_opportunities')}</h3>
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium">RFP ID</th>
-                <th className="px-4 py-2 text-left text-sm font-medium">Reason</th>
+                <th className="px-4 py-2 text-left text-sm font-medium">{t('rfp_id')}</th>
+                <th className="px-4 py-2 text-left text-sm font-medium">{t('reason')}</th>
               </tr>
             </thead>
             <tbody>

@@ -5,11 +5,17 @@ import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppStore } from '../../store';
 import { Bell, Search, Menu } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const Header: React.FC = () => {
   const { user } = useAuth();
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
   const notifications = useAppStore((state) => state.notifications);
+  const { i18n, t } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -34,7 +40,7 @@ export const Header: React.FC = () => {
                 </div>
                 <input
                   type="search"
-                  placeholder="Search RFPs..."
+                  placeholder={t('search_rfps')}
                   className="block w-full rounded-md border-gray-300 pl-10 pr-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
@@ -43,6 +49,26 @@ export const Header: React.FC = () => {
 
           {/* Right section */}
           <div className="flex items-center gap-4">
+            {/* Language Switcher */}
+            <div>
+              <button
+                onClick={() => changeLanguage('en')}
+                className={`mr-2 p-2 rounded ${
+                  i18n.language === 'en' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                {t('english')}
+              </button>
+              <button
+                onClick={() => changeLanguage('ar')}
+                className={`p-2 rounded ${
+                  i18n.language === 'ar' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                {t('arabic')}
+              </button>
+            </div>
+
             {/* Notifications */}
             <button className="relative rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
               <Bell className="h-6 w-6" />

@@ -1,5 +1,4 @@
 // src/components/settings/Integrations.tsx
-import React from 'react';
 
 const Integrations = () => {
   return (

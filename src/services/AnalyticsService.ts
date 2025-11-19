@@ -60,21 +60,19 @@ class AnalyticsService {
 
   async getWinReasons(): Promise<Record<string, number>> {
     try {
-      // Fetch from the dedicated win-loss analysis endpoint
-      const response = await ApiClient.getWinLossAnalysis() as any;
+      const response = await ApiClient.getAnalytics() as any;
 
-      if (!response || !response.data) {
+      if (!response || !response.data || !Array.isArray(response.data.winReasons)) {
         return {};
       }
 
       const reasons: Record<string, number> = {};
 
-      // Process won records
-      if (Array.isArray(response.data.won)) {
-        response.data.won.forEach((record: any) => {
-          reasons[record.reason] = (reasons[record.reason] || 0) + 1;
-        });
-      }
+      response.data.winReasons.forEach((record: any) => {
+        if (record?.reason) {
+          reasons[record.reason] = (reasons[record.reason] || 0) + (record.count || 1);
+        }
+      });
 
       return reasons;
     } catch (error) {
@@ -108,7 +106,7 @@ class AnalyticsService {
     }
   }
 
-  async getWinRateByCategory(category: string): Promise<number> {
+  async getWinRateByCategory(): Promise<number> {
     try {
       // Fetch analytics data which includes overall win rate
       const response = await ApiClient.getAnalytics() as any;

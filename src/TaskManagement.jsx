@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient as ApiClient } from './services/ApiClient';
+import { useTranslation } from 'react-i18next';
 
 // Task Management Component for RFP Process
 export const TaskManagement = ({ rfpId, currentState }) => {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,7 +74,7 @@ export const TaskManagement = ({ rfpId, currentState }) => {
   if (loading) {
     return (
       <div className="bg-white shadow rounded-lg p-6 text-center">
-        <p className="text-gray-600">Loading tasks...</p>
+        <p className="text-gray-600">{t('loading_tasks')}</p>
       </div>
     );
   }
@@ -114,26 +116,26 @@ export const TaskManagement = ({ rfpId, currentState }) => {
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Task Management</h2>
+        <h2 className="text-xl font-semibold">{t('task_management')}</h2>
         <div className="text-sm text-gray-500">
-          {tasks.filter(t => t.status === 'done').length} of {tasks.length} completed
+          {tasks.filter(t => t.status === 'done').length} {t('of')} {tasks.length} {t('completed')}
         </div>
       </div>
 
       {/* Add New Task */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <h3 className="font-medium mb-3">Add New Task</h3>
+        <h3 className="font-medium mb-3">{t('add_new_task')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
             type="text"
-            placeholder="Task title"
+            placeholder={t('task_title')}
             value={newTask.title}
             onChange={(e) => setNewTask({...newTask, title: e.target.value})}
             className="border border-gray-300 rounded-md px-3 py-2"
           />
           <input
             type="text"
-            placeholder="Assignee"
+            placeholder={t('assignee')}
             value={newTask.assignee}
             onChange={(e) => setNewTask({...newTask, assignee: e.target.value})}
             className="border border-gray-300 rounded-md px-3 py-2"
@@ -149,16 +151,16 @@ export const TaskManagement = ({ rfpId, currentState }) => {
             onChange={(e) => setNewTask({...newTask, priority: e.target.value})}
             className="border border-gray-300 rounded-md px-3 py-2"
           >
-            <option value="low">Low Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="high">High Priority</option>
+            <option value="low">{t('low_priority')}</option>
+            <option value="medium">{t('medium_priority')}</option>
+            <option value="high">{t('high_priority')}</option>
           </select>
         </div>
         <button
           onClick={addTask}
           className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
         >
-          Add Task
+          {t('add_task')}
         </button>
       </div>
 
@@ -185,10 +187,10 @@ export const TaskManagement = ({ rfpId, currentState }) => {
                     onChange={(e) => updateTaskStatus(task.id, e.target.value)}
                     className="w-full text-xs border border-gray-300 rounded px-2 py-1"
                   >
-                    <option value="todo">To Do</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="blocked">Blocked</option>
-                    <option value="done">Done</option>
+                    <option value="todo">{t('to_do')}</option>
+                    <option value="in_progress">{t('in_progress')}</option>
+                    <option value="blocked">{t('blocked')}</option>
+                    <option value="done">{t('done')}</option>
                   </select>
                 </div>
               ))}
