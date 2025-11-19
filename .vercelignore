@@ -25,7 +25,6 @@ rfp-autonomous-app-v2.zip
 .editorconfig
 .prettierrc
 .eslintrc.cjs
-tsconfig.node.json
 vite.config.js.bak
 *.md
 docs
