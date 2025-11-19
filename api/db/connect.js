@@ -23,16 +23,16 @@ module.exports = async (req, res) => {
 
   try {
     const result = await pool.query('SELECT NOW()');
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       message: 'Database connected successfully',
       timestamp: result.rows[0]
     });
   } catch (error) {
     console.error('Database connection error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 };
