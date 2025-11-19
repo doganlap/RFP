@@ -39,6 +39,7 @@ export const ROUTES = {
   },
   ANALYSIS: {
     WIN_LOSS: '/analysis/win-loss',
+    DASHBOARD: '/analytics/dashboard',
   },
   AUTH: {
     LOGIN: '/login',

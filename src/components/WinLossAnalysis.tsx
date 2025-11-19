@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AnalyticsService from '../services/AnalyticsService';
 import { useTranslation } from 'react-i18next';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface WinLossRecord {
   id: string;
@@ -42,6 +43,24 @@ const WinLossAnalysis: React.FC = () => {
 
   const totalRFPs = (data?.won.length || 0) + (data?.lost.length || 0);
   const winRate = totalRFPs > 0 ? ((data?.won.length || 0) / totalRFPs * 100).toFixed(2) : '0';
+
+  // Prepare chart data
+  const pieData = [
+    { name: t('won'), value: data?.won.length || 0, color: '#10B981' },
+    { name: t('lost'), value: data?.lost.length || 0, color: '#EF4444' }
+  ];
+
+  // Count reasons for bar chart
+  const countReasons = (items: WinLossRecord[]) => {
+    const counts: { [key: string]: number } = {};
+    items.forEach(item => {
+      counts[item.reason] = (counts[item.reason] || 0) + 1;
+    });
+    return Object.entries(counts).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count).slice(0, 5);
+  };
+
+  const wonReasons = countReasons(data?.won || []);
+  const lostReasons = countReasons(data?.lost || []);
 
   return (
     <div className="p-6">
@@ -91,24 +110,81 @@ const WinLossAnalysis: React.FC = () => {
 
       {/* Content */}
       {selectedTab === 'overview' && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">{t('key_insights')}</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-2">{t('top_win_reasons')}</h4>
-              <ul className="space-y-1 text-sm">
-                {data?.won.slice(0, 3).map((item) => (
-                  <li key={item.id} className="text-gray-700">• {item.reason}</li>
-                ))}
-              </ul>
+        <div className="space-y-6">
+          {/* Charts Row */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Win/Loss Distribution Pie Chart */}
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">{t('win_loss_distribution')}</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <div className="bg-white p-4 rounded-lg border">
-              <h4 className="font-medium mb-2">{t('top_loss_reasons')}</h4>
-              <ul className="space-y-1 text-sm">
-                {data?.lost.slice(0, 3).map((item) => (
-                  <li key={item.id} className="text-gray-700">• {item.reason}</li>
-                ))}
-              </ul>
+
+            {/* Top Win Reasons Bar Chart */}
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">{t('top_win_reasons')}</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={wonReasons}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="reason" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#10B981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Second Row */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Top Loss Reasons Bar Chart */}
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">{t('top_loss_reasons')}</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={lostReasons}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="reason" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#EF4444" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Key Insights */}
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">{t('key_insights')}</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded">
+                  <span className="text-sm font-medium">{t('win_rate')}</span>
+                  <span className="text-lg font-bold text-green-600">{winRate}%</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
+                  <span className="text-sm font-medium">{t('total_rfps')}</span>
+                  <span className="text-lg font-bold text-blue-600">{totalRFPs}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded">
+                  <span className="text-sm font-medium">{t('avg_deal_value')}</span>
+                  <span className="text-lg font-bold text-purple-600">$125K</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

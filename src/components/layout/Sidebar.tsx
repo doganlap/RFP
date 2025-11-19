@@ -3,6 +3,9 @@
  */
 import React from 'react';
 import { ROUTES } from '../../config/routes';
+import { useAppStore } from '../../store';
+import { useTranslation } from 'react-i18next';
+import { cn } from '../../utils/cn';
 import {
   Home,
   FileText,
@@ -28,7 +31,8 @@ export const Sidebar: React.FC = () => {
   const navigation: NavItem[] = [
     { name: t('dashboard'), href: ROUTES.DASHBOARD, icon: Home, current: true },
     { name: t('rfps'), href: ROUTES.RFP.LIST, icon: FileText },
-    { name: t('analytics'), href: ROUTES.ANALYSIS.WIN_LOSS, icon: BarChart3 },
+    { name: t('analytics_dashboard'), href: ROUTES.ANALYSIS.DASHBOARD, icon: BarChart3 },
+    { name: t('win_loss_analysis'), href: ROUTES.ANALYSIS.WIN_LOSS, icon: BarChart3 },
     { name: t('legal_review'), href: ROUTES.SME_GENERAL.LEGAL, icon: Shield },
     { name: t('finance_review'), href: ROUTES.SME_GENERAL.FINANCE, icon: DollarSign },
     { name: t('tech_review'), href: ROUTES.SME_GENERAL.TECH, icon: Code },
